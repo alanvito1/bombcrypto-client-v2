@@ -292,7 +292,7 @@ namespace App {
             var app = new AppleLogin();
             var res = await app.GetAccessToken();
             app.Destroy();
-            _logManager.Log($"{res.UserId} {res.AccessToken}");
+            _logManager.Log($"{res.UserId} ***");
             return await GetUserLoginDataByApple(res.AccessToken);
         }
         

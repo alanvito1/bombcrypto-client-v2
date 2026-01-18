@@ -231,40 +231,67 @@ namespace App {
             logManager.Log($"GET Web Request: {url}");
             using var request = UnityWebRequest.Get(url);
             var res = await AwaitWebResponse(request);
-            logManager.Log($"result = {res}");
+            logManager.Log($"result = ({res.Item1}, {RedactSensitiveData(res.Item2)})");
             return res;
         }
 
         public static async Task<(long, string)> GetWebResponse(ILogManager logManager, string url, string addHeader,
             string addHeaderContent) {
             logManager.Log($"GET Web Request: {url}");
-            logManager.Log($"GET header: {addHeader} {addHeaderContent}");
+            logManager.Log($"GET header: {addHeader} {(IsSensitiveHeader(addHeader) ? "***" : addHeaderContent)}");
             using var request = UnityWebRequest.Get(url);
             request.SetRequestHeader(addHeader, addHeaderContent);
             var res = await AwaitWebResponse(request);
-            logManager.Log($"result = {res}");
+            logManager.Log($"result = ({res.Item1}, {RedactSensitiveData(res.Item2)})");
             return res;
         }
 
         public static async Task<(long, string)> PostWebResponse(ILogManager logManager, string url, string jsonBody,
             string addHeader, string addHeaderContent) {
             logManager.Log($"POST Web Request: {url}");
-            logManager.Log($"POST body: {jsonBody}");
-            logManager.Log($"POST header: {addHeader} {addHeaderContent}");
+            logManager.Log($"POST body: {RedactSensitiveData(jsonBody)}");
+            logManager.Log($"POST header: {addHeader} {(IsSensitiveHeader(addHeader) ? "***" : addHeaderContent)}");
             using var request = CreatePostWebRequest(url, jsonBody);
             request.SetRequestHeader(addHeader, addHeaderContent);
             var res = await AwaitWebResponse(request);
-            logManager.Log($"result = {res}");
+            logManager.Log($"result = ({res.Item1}, {RedactSensitiveData(res.Item2)})");
             return res;
         }
 
         public static async Task<(long, string)> PostWebResponse(ILogManager logManager, string url, string jsonBody) {
             logManager.Log($"POST Web Request: {url}");
-            logManager.Log($"POST body: {jsonBody}");
+            logManager.Log($"POST body: {RedactSensitiveData(jsonBody)}");
             using var request = CreatePostWebRequest(url, jsonBody);
             var res = await AwaitWebResponse(request);
-            logManager.Log($"result = {res}");
+            logManager.Log($"result = ({res.Item1}, {RedactSensitiveData(res.Item2)})");
             return res;
+        }
+
+        private static bool IsSensitiveHeader(string header) {
+            return header.Equals("Authorization", StringComparison.OrdinalIgnoreCase) ||
+                   header.Equals("Cookie", StringComparison.OrdinalIgnoreCase) ||
+                   header.Equals("X-Auth-Token", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string RedactSensitiveData(string input) {
+            if (string.IsNullOrEmpty(input)) return input;
+            try {
+                // Regex to find keys like "password", "token", etc., and replace their values.
+                // Matches "key": "value" where value is a double-quoted string.
+                // Handles escaped quotes in the value.
+                var pattern = @"""(password|token|access_token|refresh_token|secret|signature|key|wallet_hex|private_key|input_token)""\s*:\s*""(?:[^""\\]|\\.)*""";
+                return Regex.Replace(input, pattern, m => {
+                    // Reconstruct key: "***"
+                    // The key part includes the quotes and potentially whitespace
+                    var separatorIndex = m.Value.IndexOf(':');
+                    if (separatorIndex < 0) return m.Value;
+
+                    var keyPart = m.Value.Substring(0, separatorIndex + 1);
+                    return $"{keyPart} \"***\"";
+                }, RegexOptions.IgnoreCase);
+            } catch (Exception) {
+                return input;
+            }
         }
 
         private static UnityWebRequest CreatePostWebRequest(string url, string jsonBody) {
