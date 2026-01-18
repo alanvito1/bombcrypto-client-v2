@@ -1,6 +1,8 @@
 using System;
 using System.Net.Http.Headers;
 
+using App;
+
 using Senspark;
 
 using TMPro;
@@ -66,6 +68,11 @@ namespace GroupMainMenu {
         }
 
         private void OnClicked() {
+            try {
+                ServiceLocator.Instance.Resolve<ISoundManager>().PlaySound(Audio.Tap);
+            } catch (Exception) {
+                // Ignore
+            }
             _onClickedCallback?.Invoke();
         }
     }
