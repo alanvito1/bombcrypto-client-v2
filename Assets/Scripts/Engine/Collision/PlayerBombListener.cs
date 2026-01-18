@@ -21,7 +21,9 @@ namespace Engine.Collision {
                     player.StuckWithBomb = false;
                     if (!player.WalkThrough.ThroughBomb) {
                         player.HadOutOfBomb = true;
-                        otherEntity.GetComponent<Bomb>()?.CheckOnBomb();
+                        // Optimization: otherEntity is already verified as Bomb type, so we can cast directly
+                        // instead of using expensive GetComponent call.
+                        ((Bomb)otherEntity).CheckOnBomb();
                     }
                 } else if (entity is BasicEnemy) {
                     var bomb = otherEntity as Bomb;
@@ -32,7 +34,8 @@ namespace Engine.Collision {
                     var enemy = (BasicEnemy) entity;
                     if (enemy.WalkThrough is {ThroughBomb: false}) {
                         enemy.HadOutOfBomb = true;
-                        otherEntity.GetComponent<Bomb>()?.CheckOnBomb();
+                        // Optimization: Use the already cast 'bomb' variable
+                        bomb.CheckOnBomb();
                     }
                 }
             }
