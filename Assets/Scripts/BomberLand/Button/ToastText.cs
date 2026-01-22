@@ -1,5 +1,5 @@
 using DG.Tweening;
-
+using Services;
 using TMPro;
 
 using UnityEngine;
@@ -18,7 +18,7 @@ namespace BomberLand.Button {
         private const float Distance = 200;
         
         public static ToastText Create() {
-            var prefab = Resources.Load<ToastText>("Prefabs/UI/ToastText");
+            var prefab = AssetLoader.Load<ToastText>("Prefabs/UI/ToastText");
             return Instantiate(prefab);
         }
         
