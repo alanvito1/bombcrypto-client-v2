@@ -30,17 +30,45 @@ namespace Game.UI.Custom {
         private bool _isLoad = false;
         private TaskCompletionSource<bool> _waitLayoutDone;
 
+        // Cache components
+        private GridLayoutGroup _gridLayoutGroup;
+        private RectTransform _parentRect;
+
+        private GridLayoutGroup CachedGridLayoutGroup {
+            get {
+                if (_gridLayoutGroup == null) {
+                    _gridLayoutGroup = GetComponent<GridLayoutGroup>();
+                }
+                return _gridLayoutGroup;
+            }
+        }
+
+        private RectTransform CachedParentRect {
+            get {
+                if (_parentRect == null && transform.parent != null) {
+                    _parentRect = transform.parent.GetComponent<RectTransform>();
+                }
+                return _parentRect;
+            }
+        }
+
+        // Invalidate parent cache if hierarchy changes
+        private void OnTransformParentChanged() {
+            _parentRect = null;
+        }
+
         public async Task<int> GetColumn() {
             await WaitLayoutDone;
-            var gridLayoutGroup = GetComponent<GridLayoutGroup>();
-            return gridLayoutGroup.constraintCount;
+            // Use cached component
+            return CachedGridLayoutGroup.constraintCount;
         }
         
         public void SetLayoutHorizontal() {
             if(!Application.isPlaying) {
                 return;
             }
-            var gridLayoutGroup = GetComponent<GridLayoutGroup>();
+            // Use cached component
+            var gridLayoutGroup = CachedGridLayoutGroup;
             if (!gridLayoutGroup) {
                 return;
             }
@@ -49,7 +77,13 @@ namespace Game.UI.Custom {
                 gridLayoutGroup.padding.left = 0;
             }
             
-            var size = this.transform.parent.GetComponent<RectTransform>().rect.size;
+            // Use cached parent rect
+            var parent = CachedParentRect;
+            if (parent == null) {
+                return;
+            }
+
+            var size = parent.rect.size;
             size.x -= gridLayoutGroup.padding.left;
             if (size.x <= 0) {
                 return;

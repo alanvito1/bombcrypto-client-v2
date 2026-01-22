@@ -63,6 +63,10 @@ namespace Game.UI.Custom
         private bool _requestAutoLayout = false;
         private Action _onAutoLayoutDone = null;
         
+        // Cache layout groups
+        [System.NonSerialized] private VerticalLayoutGroup _verticalLayoutGroup;
+        [System.NonSerialized] private HorizontalLayoutGroup _horizontalLayoutGroup;
+
         // public Rect rect =>  m_Rect.rect;
         private RectTransform rectTransform
         {
@@ -72,6 +76,24 @@ namespace Game.UI.Custom
                     m_Rect = GetComponent<RectTransform>();
                 }
                 return m_Rect;
+            }
+        }
+
+        private VerticalLayoutGroup CachedVerticalLayoutGroup {
+            get {
+                if (_verticalLayoutGroup == null) {
+                    _verticalLayoutGroup = GetComponent<VerticalLayoutGroup>();
+                }
+                return _verticalLayoutGroup;
+            }
+        }
+
+        private HorizontalLayoutGroup CachedHorizontalLayoutGroup {
+            get {
+                if (_horizontalLayoutGroup == null) {
+                    _horizontalLayoutGroup = GetComponent<HorizontalLayoutGroup>();
+                }
+                return _horizontalLayoutGroup;
             }
         }
 
@@ -198,7 +220,7 @@ namespace Game.UI.Custom
 
         private void SnapVertical() {
             var contentTransform = this.transform;
-            var verticalLayoutGroup = contentTransform.GetComponent<VerticalLayoutGroup>();
+            var verticalLayoutGroup = CachedVerticalLayoutGroup;
             if(!verticalLayoutGroup) {
                 return;
             }
@@ -224,7 +246,7 @@ namespace Game.UI.Custom
         
         private void SnapHorizontal() {
             var contentTransform = this.transform;
-            var horizLayoutGroup = contentTransform.GetComponent<HorizontalLayoutGroup>();
+            var horizLayoutGroup = CachedHorizontalLayoutGroup;
             if(!horizLayoutGroup) {
                 return;
             }
