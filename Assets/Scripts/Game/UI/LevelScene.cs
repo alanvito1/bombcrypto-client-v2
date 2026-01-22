@@ -281,7 +281,7 @@ namespace Game.UI {
 
             ServiceLocator.Instance.Resolve<ISoundManager>().StopImmediateMusic();
             await SceneLoader.ReloadSceneAsync(() => {
-                var levelScene1 = FindObjectOfType<LevelScene>();
+                var levelScene1 = Instance ? Instance : FindObjectOfType<LevelScene>();
                 levelScene1.Mode = GameModeType.TreasureHuntV2;
                 levelScene1._showBanners = showBanners;
                 levelScene1._onLoaded = onLoaded;
@@ -291,7 +291,7 @@ namespace Game.UI {
         public static async UniTask OpenTreasureHuntWithoutLoad() {
             var sceneName = (AppConfig.IsWebGL() && !AppConfig.IsWebAirdrop()) ? "FarmingScene" : "TreasureModeScene";
             await SceneLoader.LoadSceneAsync(sceneName, g => {
-                var levelScene = FindObjectOfType<LevelScene>();
+                var levelScene = Instance ? Instance : FindObjectOfType<LevelScene>();
                 levelScene.Mode = GameModeType.TreasureHuntV2;
                 levelScene._showBanners = true;
                 levelScene._onLoaded = null;

@@ -68,6 +68,8 @@ namespace Share.Scripts.Utils {
             {
                 await UniTask.Yield();
             }
+
+            await Resources.UnloadUnusedAssets();
             IsLoading = false;
         }
         
@@ -150,6 +152,7 @@ namespace Share.Scripts.Utils {
             }
             await UniTask.WaitUntil(()=> _isMoveToNewSceneComplete);
             await SceneManager.UnloadSceneAsync(currentScene);
+            await Resources.UnloadUnusedAssets();
             onLoaded?.Invoke();
             IsLoading = false;
 

@@ -156,15 +156,15 @@ namespace App {
             if (string.IsNullOrWhiteSpace(response)) {
                 return infoList;
             }
-            var obj = JObject.Parse(response);
-            var msg = (JObject)obj["message"];
-            var details = (JArray)msg["details"];
-            foreach (var item in details) {
-                var zone = (JObject)item;
-                var rooms = (JArray)zone["rooms"];
-                foreach (var item2 in rooms) {
-                    var info = JsonConvert.DeserializeObject<PvpRoomInfo>(item2.ToString());
-                    infoList.Add(info);
+
+            var wrapper = JsonConvert.DeserializeObject<PvpRoomListResponse>(response);
+            if (wrapper?.Message?.Details != null) {
+                foreach (var detail in wrapper.Message.Details) {
+                    if (detail.Rooms != null) {
+                        foreach (var room in detail.Rooms) {
+                            infoList.Add(room);
+                        }
+                    }
                 }
             }
             return infoList;
@@ -177,12 +177,12 @@ namespace App {
             if (string.IsNullOrWhiteSpace(response)) {
                 return matchList;
             }
-            var obj = JObject.Parse(response);
-            var message = (JObject)obj["message"];
-            var matches = (JArray)message["matches"];
-            foreach (var item in matches) {
-                var match = JsonConvert.DeserializeObject<PvpMatchSchedule>(item.ToString());
-                matchList.Add(match);
+
+            var wrapper = JsonConvert.DeserializeObject<PvpMatchesResponse>(response);
+            if (wrapper?.Message?.Matches != null) {
+                foreach (var match in wrapper.Message.Matches) {
+                    matchList.Add(match);
+                }
             }
             return matchList;
         }
@@ -198,15 +198,36 @@ namespace App {
             if (string.IsNullOrWhiteSpace(response)) {
                 return matchList;
             }
-            var obj = JObject.Parse(response);
 
-            var message = (JObject)obj["message"];
-            var matches = (JArray)message["my_match"];
-            foreach (var item in matches) {
-                var match = JsonConvert.DeserializeObject<string>(item.ToString());
-                matchList.Add(match);
+            var wrapper = JsonConvert.DeserializeObject<MyMatchesResponse>(response);
+            if (wrapper?.Message?.MyMatch != null) {
+                matchList.AddRange(wrapper.Message.MyMatch);
             }
             return matchList;
+        }
+
+        private class PvpRoomListResponse {
+            [JsonProperty("message")] public PvpRoomListMessage Message { get; set; }
+        }
+        private class PvpRoomListMessage {
+            [JsonProperty("details")] public List<PvpRoomListDetail> Details { get; set; }
+        }
+        private class PvpRoomListDetail {
+            [JsonProperty("rooms")] public List<PvpRoomInfo> Rooms { get; set; }
+        }
+
+        private class PvpMatchesResponse {
+            [JsonProperty("message")] public PvpMatchesMessage Message { get; set; }
+        }
+        private class PvpMatchesMessage {
+            [JsonProperty("matches")] public List<PvpMatchSchedule> Matches { get; set; }
+        }
+
+        private class MyMatchesResponse {
+             [JsonProperty("message")] public MyMatchesMessage Message { get; set; }
+        }
+        private class MyMatchesMessage {
+             [JsonProperty("my_match")] public List<string> MyMatch { get; set; }
         }
     }
 }
