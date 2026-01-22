@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -29,11 +29,14 @@ namespace App {
             string memberName = "",
             string sourceFilePath = "",
             int sourceLineNumber = 0) {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (!_enableLog) return;
             var fileName = Path.GetFileName(sourceFilePath);
             var time = DateTime.Now.ToString("hh:mm:ss");
             var messageWithColon = message.Length == 0 ? "" : $": {message}";
             var fullMessage = $"{fileName}:{sourceLineNumber}-{time}: {memberName + messageWithColon}";
             Debug.Log(fullMessage);
+#endif
         }
     }
 }

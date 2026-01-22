@@ -31,6 +31,7 @@ public interface IInputManager: IService {
     void SetVibration(float time);
     void SetVibration();
     void SetVibration(float min, float max, float time = 0.5f);
+    float LastInputTime { get; }
 }
 public class InputManager : MonoBehaviour, IInputManager
 {
@@ -43,10 +44,13 @@ public class InputManager : MonoBehaviour, IInputManager
     private readonly Gamepad _pad = Gamepad.current;
     
     private InputConfigData _inputConfig;
-    
+    private Vector3 _lastMousePos;
+
     public ControllerType ControllerType => _inputCheckChange.ControllerType;
-    
-    
+
+    public float LastInputTime { get; private set; }
+
+
     public InputConfigData InputConfig {
         get => _inputConfig;
         set => _inputConfig = value;
@@ -82,6 +86,9 @@ public class InputManager : MonoBehaviour, IInputManager
         //Lưu lại hình ảnh của controller
         _inputCacheImage = new InputCacheImage();
         
+        LastInputTime = Time.time;
+        _lastMousePos = Input.mousePosition;
+
         //For testing
         // if(!AppConfig.IsProduction) {
         //     new TestInput();
@@ -137,6 +144,11 @@ public class InputManager : MonoBehaviour, IInputManager
     private void Update() {
         _inputCheckChange.Process();
         _inputDetection.Process();
+
+        if (Input.anyKey || Input.mousePosition != _lastMousePos) {
+            LastInputTime = Time.time;
+            _lastMousePos = Input.mousePosition;
+        }
     }
 
     #region Vibration

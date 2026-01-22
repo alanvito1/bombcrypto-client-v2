@@ -70,12 +70,24 @@ namespace App {
         public static async Task<(bool, double)> WaitForBalanceChange(RpcTokenCategory type,
             IBlockchainManager blockchainManager, IBlockchainStorageManager blockchainStorage) {
             var coinBefore = blockchainStorage.GetBalance(type);
+            var inputManager = ServiceLocator.Instance.Resolve<IInputManager>();
+
             for (var times = 0; times < 3; ++times) {
                 var coinAfter = await blockchainManager.GetBalance(type);
                 if (!MathUtils.Approximately(coinBefore, coinAfter)) {
                     return (true, coinAfter);
                 }
-                await WebGLTaskDelay.Instance.Delay(10000);
+
+                var delayTime = 10000;
+                if (inputManager != null) {
+                    var idleTime = Time.time - inputManager.LastInputTime;
+                    // If idle for more than 5 minutes, increase polling interval
+                    if (idleTime > 300) {
+                        delayTime = 20000;
+                    }
+                }
+
+                await WebGLTaskDelay.Instance.Delay(delayTime);
             }
             return (false, coinBefore);
         }
@@ -83,6 +95,18 @@ namespace App {
         // Unity chủ động logout thì phải gọi react để reload
         public static void KickToConnectScene() {
             var unityCommunication = ServiceLocator.Instance.Resolve<IMasterUnityCommunication>();
+
+            // Soft-Logout Check
+            var authManager = ServiceLocator.Instance.Resolve<IAuthManager>();
+            var jwt = unityCommunication.JwtSession?.RawJwt;
+            if (!string.IsNullOrEmpty(jwt) && authManager != null) {
+                 var result = authManager.ValidateUserLoginToken(jwt);
+                 if (result == JwtValidateResult.Valid) {
+                     Debug.Log("Soft Kick Prevented: Token is still valid.");
+                     return;
+                 }
+            }
+
             unityCommunication.ResetSession();
             ReloadToConnectScene();
             UniTask.Void(async () => {
@@ -228,43 +252,77 @@ namespace App {
         }
 
         public static async Task<(long, string)> GetWebResponse(ILogManager logManager, string url) {
-            logManager.Log($"GET Web Request: {url}");
-            using var request = UnityWebRequest.Get(url);
-            var res = await AwaitWebResponse(request);
-            logManager.Log($"result = ({res.Item1}, {RedactSensitiveData(res.Item2)})");
-            return res;
+            return await ExecuteWebRequestWithRetry(logManager, () => UnityWebRequest.Get(url), "GET", url);
         }
 
         public static async Task<(long, string)> GetWebResponse(ILogManager logManager, string url, string addHeader,
             string addHeaderContent) {
-            logManager.Log($"GET Web Request: {url}");
-            logManager.Log($"GET header: {addHeader} {(IsSensitiveHeader(addHeader) ? "***" : addHeaderContent)}");
-            using var request = UnityWebRequest.Get(url);
-            request.SetRequestHeader(addHeader, addHeaderContent);
-            var res = await AwaitWebResponse(request);
-            logManager.Log($"result = ({res.Item1}, {RedactSensitiveData(res.Item2)})");
-            return res;
+            return await ExecuteWebRequestWithRetry(logManager, () => {
+                var request = UnityWebRequest.Get(url);
+                request.SetRequestHeader(addHeader, addHeaderContent);
+                return request;
+            }, "GET", url, null, addHeader, addHeaderContent);
         }
 
         public static async Task<(long, string)> PostWebResponse(ILogManager logManager, string url, string jsonBody,
             string addHeader, string addHeaderContent) {
-            logManager.Log($"POST Web Request: {url}");
-            logManager.Log($"POST body: {RedactSensitiveData(jsonBody)}");
-            logManager.Log($"POST header: {addHeader} {(IsSensitiveHeader(addHeader) ? "***" : addHeaderContent)}");
-            using var request = CreatePostWebRequest(url, jsonBody);
-            request.SetRequestHeader(addHeader, addHeaderContent);
-            var res = await AwaitWebResponse(request);
-            logManager.Log($"result = ({res.Item1}, {RedactSensitiveData(res.Item2)})");
-            return res;
+            return await ExecuteWebRequestWithRetry(logManager, () => {
+                var request = CreatePostWebRequest(url, jsonBody);
+                request.SetRequestHeader(addHeader, addHeaderContent);
+                return request;
+            }, "POST", url, jsonBody, addHeader, addHeaderContent);
         }
 
         public static async Task<(long, string)> PostWebResponse(ILogManager logManager, string url, string jsonBody) {
-            logManager.Log($"POST Web Request: {url}");
-            logManager.Log($"POST body: {RedactSensitiveData(jsonBody)}");
-            using var request = CreatePostWebRequest(url, jsonBody);
-            var res = await AwaitWebResponse(request);
-            logManager.Log($"result = ({res.Item1}, {RedactSensitiveData(res.Item2)})");
-            return res;
+             return await ExecuteWebRequestWithRetry(logManager, () => CreatePostWebRequest(url, jsonBody), "POST", url, jsonBody);
+        }
+
+        private static async Task<(long, string)> ExecuteWebRequestWithRetry(
+            ILogManager logManager,
+            Func<UnityWebRequest> createRequest,
+            string methodType,
+            string url,
+            string logBody = null,
+            string logHeaderTitle = null,
+            string logHeaderContent = null)
+        {
+            int maxRetries = 3;
+            int delay = 1000;
+            long lastResponseCode = 0;
+            string lastResult = "";
+
+            logManager.Log($"{methodType} Web Request: {url}");
+            if (logBody != null) logManager.Log($"{methodType} body: {RedactSensitiveData(logBody)}");
+            if (logHeaderTitle != null) logManager.Log($"{methodType} header: {logHeaderTitle} {(IsSensitiveHeader(logHeaderTitle) ? "***" : logHeaderContent)}");
+
+            for (int i = 0; i <= maxRetries; i++) {
+                using var request = createRequest();
+
+                await request.SendWebRequest();
+
+                lastResponseCode = request.responseCode;
+                lastResult = request.downloadHandler?.text ?? request.error ?? "";
+
+                if (request.result == UnityWebRequest.Result.Success) {
+                     logManager.Log($"result = ({lastResponseCode}, {RedactSensitiveData(lastResult)})");
+                     return (lastResponseCode, lastResult);
+                }
+
+                bool is5xx = lastResponseCode >= 500 && lastResponseCode < 600;
+                bool shouldRetry = request.result == UnityWebRequest.Result.ConnectionError || is5xx;
+
+                if (shouldRetry && i < maxRetries) {
+                    logManager.Log($"{methodType} Retry {i+1}/{maxRetries} for {url} (Code: {lastResponseCode})");
+                    await WebGLTaskDelay.Instance.Delay(delay);
+                    delay *= 2;
+                    continue;
+                }
+
+                break;
+            }
+
+            logManager.Log($"result = ({lastResponseCode}, {RedactSensitiveData(lastResult)})");
+            return (lastResponseCode, lastResult);
         }
 
         private static bool IsSensitiveHeader(string header) {
