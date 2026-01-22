@@ -146,7 +146,7 @@ namespace App {
         private static string GetHost(string host, string command, string param = null) {
             return param == null
                 ? $"{host}{command}"
-                : $"{host}{command}{param}";
+                : $"{host}{command}{Uri.EscapeDataString(param)}";
         }
 
         public async Task<List<IPvpRoomInfo>> GetPvpRoomList() {
