@@ -60,10 +60,10 @@ namespace Engine.Components
             }
             //-----------
 
+            // Optimization: Use pattern matching (is) instead of GetComponent to avoid O(N) lookup.
             if (ThroughBrick)
             {
-                var softBlock = obstacle.GetComponent<SoftBlock>();
-                if (softBlock)
+                if (obstacle is SoftBlock)
                 {
                     return;
                 }
@@ -71,11 +71,11 @@ namespace Engine.Components
 
             if (ThroughBomb)
             {
-                if (obstacle is Bomb)
+                if (obstacle is Bomb bomb)
                 {
                     if (destroyMode)
                     {
-                        obstacle.GetComponent<Bomb>()?.StartExplode(obstacle.transform.localPosition);
+                        bomb.StartExplode(obstacle.transform.localPosition);
                     }
                     return;
                 }
@@ -87,8 +87,7 @@ namespace Engine.Components
             }
 
             if (ThroughWall) {
-                var wall = obstacle.GetComponent<Wall>();
-                if (wall) {
+                if (obstacle is Wall) {
                     return;
                 }
             }
