@@ -56,7 +56,7 @@ namespace App {
 
         private async Task<JObject> GetRequest(string host) {
             var account = _accountManager.Account;
-            var url = $"{host}/{account}";
+            var url = $"{host}/{Uri.EscapeDataString(account)}";
             var request = UnityWebRequest.Get(url);
             request.timeout = 30;
             await request.SendWebRequest();
