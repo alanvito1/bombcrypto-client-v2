@@ -2,12 +2,13 @@ using System;
 using System.Net.Http.Headers;
 
 using App;
-
+using DG.Tweening;
 using Senspark;
 
 using TMPro;
 
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace GroupMainMenu {
@@ -24,13 +25,17 @@ namespace GroupMainMenu {
         public Button Button => button;
 
         private System.Action _onClickedCallback;
-        
+        private Vector3 _originalScale;
 
         public bool Interactable {
             get => button.interactable;
             set {
                 InteractableColor(value);
                 button.interactable = value;
+                if (!value) {
+                    transform.DOKill();
+                    transform.localScale = _originalScale;
+                }
             }
         }
 
@@ -43,7 +48,7 @@ namespace GroupMainMenu {
         }
 
         public void SetInteractable(bool value) {
-            button.interactable = value;
+            Interactable = value;
         }
         
         public void SetVisible(bool value) {
@@ -61,6 +66,56 @@ namespace GroupMainMenu {
         
         protected virtual void Awake() {
             button.onClick.AddListener(OnClicked);
+
+            _originalScale = transform.localScale;
+            AddHoverEvents();
+        }
+
+        private void AddHoverEvents() {
+            var eventTrigger = button.gameObject.GetComponent<EventTrigger>();
+            if (eventTrigger == null) eventTrigger = button.gameObject.AddComponent<EventTrigger>();
+
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerEnter, OnPointerEnter);
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerExit, OnPointerExit);
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerDown, OnPointerDown);
+            AddEventTrigger(eventTrigger, EventTriggerType.PointerUp, OnPointerUp);
+        }
+
+        private void AddEventTrigger(EventTrigger trigger, EventTriggerType type, UnityEngine.Events.UnityAction<BaseEventData> action) {
+            var entry = new EventTrigger.Entry { eventID = type };
+            entry.callback.AddListener(action);
+            trigger.triggers.Add(entry);
+        }
+
+        private void OnPointerEnter(BaseEventData data) {
+            if (Interactable) {
+                transform.DOScale(_originalScale * 1.05f, 0.2f).SetEase(Ease.OutQuad);
+            }
+        }
+
+        private void OnPointerExit(BaseEventData data) {
+            if (Interactable) {
+                transform.DOScale(_originalScale, 0.2f).SetEase(Ease.OutQuad);
+            }
+        }
+
+        private void OnPointerDown(BaseEventData data) {
+            if (Interactable) {
+                transform.DOScale(_originalScale * 0.95f, 0.1f).SetEase(Ease.OutQuad);
+            }
+        }
+
+        private void OnPointerUp(BaseEventData data) {
+            if (Interactable) {
+                var pointerData = data as PointerEventData;
+                bool isHovering = pointerData != null && pointerData.pointerEnter == button.gameObject;
+
+                if (isHovering) {
+                     transform.DOScale(_originalScale * 1.05f, 0.1f).SetEase(Ease.OutQuad);
+                } else {
+                     transform.DOScale(_originalScale, 0.1f).SetEase(Ease.OutQuad);
+                }
+            }
         }
 
         public void SetOnClickedCallback(System.Action callback) {

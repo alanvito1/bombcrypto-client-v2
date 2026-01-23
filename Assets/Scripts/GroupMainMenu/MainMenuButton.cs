@@ -28,6 +28,7 @@ namespace GroupMainMenu {
         }
 
         protected override void Awake() {
+            base.Awake();
             button.onClick.AddListener(OnClicked);
         }
         
