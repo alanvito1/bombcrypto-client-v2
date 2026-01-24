@@ -7,3 +7,8 @@
 **Vulnerability:** DefaultClaimManager constructed URLs by directly concatenating user account identifiers, allowing for potential path traversal or query parameter injection if the identifier contained special characters.
 **Learning:** Even seemingly safe identifiers like wallet addresses or usernames should be treated as untrusted input when constructing URLs, as they might be manipulated or contain unexpected characters.
 **Prevention:** Always use Uri.EscapeDataString() when inserting dynamic values into URL paths or query strings.
+
+## 2024-11-20 - [Ineffective Redaction on Nested JSON]
+**Vulnerability:** `RedactSensitiveData` uses regex matching `""key""` which fails to detect keys in escaped JSON strings (e.g., inside `CallBlockChain` params), leaving sensitive data exposed in `UnityToReact` logs.
+**Learning:** Simple regex on stringified JSON is fragile when JSON is nested or escaped.
+**Prevention:** Use recursive JSON parsing for redaction or enhance regex to handle escaped quotes `(?:""|\\")`.
