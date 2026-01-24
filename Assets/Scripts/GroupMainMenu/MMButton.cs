@@ -79,12 +79,26 @@ namespace GroupMainMenu {
             AddEventTrigger(eventTrigger, EventTriggerType.PointerExit, OnPointerExit);
             AddEventTrigger(eventTrigger, EventTriggerType.PointerDown, OnPointerDown);
             AddEventTrigger(eventTrigger, EventTriggerType.PointerUp, OnPointerUp);
+            AddEventTrigger(eventTrigger, EventTriggerType.Select, OnSelect);
+            AddEventTrigger(eventTrigger, EventTriggerType.Deselect, OnDeselect);
         }
 
         private void AddEventTrigger(EventTrigger trigger, EventTriggerType type, UnityEngine.Events.UnityAction<BaseEventData> action) {
             var entry = new EventTrigger.Entry { eventID = type };
             entry.callback.AddListener(action);
             trigger.triggers.Add(entry);
+        }
+
+        private void OnSelect(BaseEventData data) {
+            if (Interactable) {
+                transform.DOScale(_originalScale * 1.05f, 0.2f).SetEase(Ease.OutQuad);
+            }
+        }
+
+        private void OnDeselect(BaseEventData data) {
+            if (Interactable) {
+                transform.DOScale(_originalScale, 0.2f).SetEase(Ease.OutQuad);
+            }
         }
 
         private void OnPointerEnter(BaseEventData data) {
@@ -95,6 +109,9 @@ namespace GroupMainMenu {
 
         private void OnPointerExit(BaseEventData data) {
             if (Interactable) {
+                if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == button.gameObject) {
+                    return;
+                }
                 transform.DOScale(_originalScale, 0.2f).SetEase(Ease.OutQuad);
             }
         }
