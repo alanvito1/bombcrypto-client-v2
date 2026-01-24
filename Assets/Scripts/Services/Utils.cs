@@ -583,64 +583,64 @@ namespace App {
         }
 
         public static string ConvertTimeToStringDhm(TimeSpan timeSpan) {
-            var r = "";
+            var sb = new StringBuilder();
             var isDidAdd = false;
             if (timeSpan.Days > 0) {
-                r += $@"{timeSpan.Days}d";
+                sb.Append(timeSpan.Days).Append("d");
                 isDidAdd = true;
             }
             if (timeSpan.Hours > 0) {
                 if (isDidAdd) {
-                    r += " ";
+                    sb.Append(" ");
                 }
-                r += $@"{timeSpan.Hours}h";
+                sb.Append(timeSpan.Hours).Append("h");
                 isDidAdd = true;
             }
             if (timeSpan.Minutes > 0) {
                 if (isDidAdd) {
-                    r += " ";
+                    sb.Append(" ");
                 }
-                r += $@"{timeSpan.Minutes}m";
+                sb.Append(timeSpan.Minutes).Append("m");
                 isDidAdd = true;
             }
             if (!isDidAdd) {
                 return "0M";
             }
-            return r;
+            return sb.ToString();
         }
         
         public static string ConvertTimeToString(TimeSpan timeSpan) {
-            var r = "";
+            var sb = new StringBuilder();
             var isDidAdd = false;
             if (timeSpan.Days > 0) {
-                r += $@"{timeSpan.Days}d";
+                sb.Append(timeSpan.Days).Append("d");
                 isDidAdd = true;
             }
             if (timeSpan.Hours > 0) {
                 if (isDidAdd) {
-                    r += " ";
+                    sb.Append(" ");
                 }
-                r += $@"{timeSpan.Hours}h";
+                sb.Append(timeSpan.Hours).Append("h");
                 isDidAdd = true;
             }
             if (timeSpan.Minutes > 0) {
                 if (isDidAdd) {
-                    r += " ";
+                    sb.Append(" ");
                 }
-                r += $@"{timeSpan.Minutes}m";
+                sb.Append(timeSpan.Minutes).Append("m");
                 isDidAdd = true;
             }
             if (timeSpan.Seconds > 0) {
                 if (isDidAdd) {
-                    r += " ";
+                    sb.Append(" ");
                 }
-                r += $@"{timeSpan.Seconds}s";
+                sb.Append(timeSpan.Seconds).Append("s");
                 isDidAdd = true;
             }
             if (!isDidAdd) {
                 return "0s";
             }
-            return r;
+            return sb.ToString();
         }
 
         public static string ConvertTimeToStringFull(long duration) {
@@ -648,49 +648,49 @@ namespace App {
         }
 
         public static string ConvertTimeToStringFull(TimeSpan timeSpan) {
-            var r = "";
+            var sb = new StringBuilder();
             var isDidAdd = false;
             if (timeSpan.Days > 0) {
-                r += $@"{timeSpan.Days} Day";
+                sb.Append(timeSpan.Days).Append(" Day");
                 if (timeSpan.Days > 1) {
-                    r += "s";
+                    sb.Append("s");
                 }
                 isDidAdd = true;
             }
             if (timeSpan.Hours > 0) {
                 if (isDidAdd) {
-                    r += " ";
+                    sb.Append(" ");
                 }
-                r += $@"{timeSpan.Hours} Hour";
+                sb.Append(timeSpan.Hours).Append(" Hour");
                 if (timeSpan.Hours > 1) {
-                    r += "s";
+                    sb.Append("s");
                 }
                 isDidAdd = true;
             }
             if (timeSpan.Minutes > 0) {
                 if (isDidAdd) {
-                    r += " ";
+                    sb.Append(" ");
                 }
-                r += $@"{timeSpan.Minutes} Minute";
+                sb.Append(timeSpan.Minutes).Append(" Minute");
                 if (timeSpan.Minutes > 1) {
-                    r += "s";
+                    sb.Append("s");
                 }
                 isDidAdd = true;
             }
             if (timeSpan.Seconds > 0) {
                 if (isDidAdd) {
-                    r += " ";
+                    sb.Append(" ");
                 }
-                r += $@"{timeSpan.Seconds} Second";
+                sb.Append(timeSpan.Seconds).Append(" Second");
                 if (timeSpan.Seconds > 1) {
-                    r += "s";
+                    sb.Append("s");
                 }
                 isDidAdd = true;
             }
             if (!isDidAdd) {
                 return "0 Second";
             }
-            return r;
+            return sb.ToString();
         }
     }
 
