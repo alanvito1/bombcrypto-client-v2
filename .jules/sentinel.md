@@ -7,3 +7,8 @@
 **Vulnerability:** DefaultClaimManager constructed URLs by directly concatenating user account identifiers, allowing for potential path traversal or query parameter injection if the identifier contained special characters.
 **Learning:** Even seemingly safe identifiers like wallet addresses or usernames should be treated as untrusted input when constructing URLs, as they might be manipulated or contain unexpected characters.
 **Prevention:** Always use Uri.EscapeDataString() when inserting dynamic values into URL paths or query strings.
+
+## 2024-11-19 - [Incomplete Sensitive Data Redaction]
+**Vulnerability:** The centralized logging redaction list missed `newPassword`, causing it to be logged in plain text during password reset operations.
+**Learning:** Allow-lists or Block-lists for sensitive keys are brittle and require constant maintenance as API contracts evolve (e.g., `newPassword`, `confirmPassword`).
+**Prevention:** Periodically audit logging utilities against API definitions to ensure all sensitive fields are covered, or use a "safe by default" logging approach that only logs whitelisted non-sensitive fields.

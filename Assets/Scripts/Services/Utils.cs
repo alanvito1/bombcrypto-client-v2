@@ -337,7 +337,7 @@ namespace App {
                 // Regex to find keys like "password", "token", etc., and replace their values.
                 // Matches "key": "value" where value is a double-quoted string.
                 // Handles escaped quotes in the value.
-                var pattern = @"""(password|token|access_token|refresh_token|secret|signature|key|wallet_hex|private_key|input_token)""\s*:\s*""(?:[^""\\]|\\.)*""";
+                var pattern = @"""(password|newPassword|token|access_token|refresh_token|secret|signature|key|wallet_hex|private_key|input_token)""\s*:\s*""(?:[^""\\]|\\.)*""";
                 return Regex.Replace(input, pattern, m => {
                     // Reconstruct key: "***"
                     // The key part includes the quotes and potentially whitespace
