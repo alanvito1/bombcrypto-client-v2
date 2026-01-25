@@ -23,6 +23,39 @@ namespace Engine.Entities {
 
         public ObscuredBool Immortal { get; set; } = false;
 
+        // Bolt: Cache DamageDealer component to avoid expensive GetComponent calls in collision loops.
+        // Optimization: Lazy load once and cache the result (even if null) to ensure O(1) access.
+        private Engine.Components.DamageDealer _damageDealer;
+        private bool _damageDealerCached;
+        public Engine.Components.DamageDealer DamageDealer
+        {
+            get
+            {
+                if (!_damageDealerCached)
+                {
+                    _damageDealer = GetComponent<Engine.Components.DamageDealer>();
+                    _damageDealerCached = true;
+                }
+                return _damageDealer;
+            }
+        }
+
+        // Bolt: Cache DamageReceiver component for the same reason.
+        private Engine.Components.DamageReceiver _damageReceiver;
+        private bool _damageReceiverCached;
+        public Engine.Components.DamageReceiver DamageReceiver
+        {
+            get
+            {
+                if (!_damageReceiverCached)
+                {
+                    _damageReceiver = GetComponent<Engine.Components.DamageReceiver>();
+                    _damageReceiverCached = true;
+                }
+                return _damageReceiver;
+            }
+        }
+
         private readonly ComponentContainer _componentContainer = new ComponentContainer();
 
         private void OnDestroy() {

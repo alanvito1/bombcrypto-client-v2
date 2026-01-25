@@ -18,8 +18,8 @@ namespace Engine.Collision
                 return;
             }
 
-            var dealer = entity.GetComponent<DamageDealer>();
-            var receiver = otherEntity.GetComponent<DamageReceiver>();
+            var dealer = entity.DamageDealer;
+            var receiver = otherEntity.DamageReceiver;
             if (dealer == null || receiver == null)
             {
                 return;
