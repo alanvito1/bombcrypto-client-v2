@@ -12,7 +12,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace GroupMainMenu {
-    public class MMButton : MonoBehaviour {
+    public class MMButton : MonoBehaviour, ISelectHandler, IDeselectHandler {
         [SerializeField]
         protected Button button;
 
@@ -26,6 +26,8 @@ namespace GroupMainMenu {
 
         private System.Action _onClickedCallback;
         private Vector3 _originalScale;
+        private bool _isHovered;
+        private bool _isSelected;
 
         public bool Interactable {
             get => button.interactable;
@@ -87,16 +89,31 @@ namespace GroupMainMenu {
             trigger.triggers.Add(entry);
         }
 
-        private void OnPointerEnter(BaseEventData data) {
+        public void OnSelect(BaseEventData eventData) {
+            _isSelected = true;
+            UpdateScale();
+        }
+
+        public void OnDeselect(BaseEventData eventData) {
+            _isSelected = false;
+            UpdateScale();
+        }
+
+        private void UpdateScale(float duration = 0.2f) {
             if (Interactable) {
-                transform.DOScale(_originalScale * 1.05f, 0.2f).SetEase(Ease.OutQuad);
+                var targetScale = (_isHovered || _isSelected) ? 1.05f : 1.0f;
+                transform.DOScale(_originalScale * targetScale, duration).SetEase(Ease.OutQuad);
             }
         }
 
+        private void OnPointerEnter(BaseEventData data) {
+            _isHovered = true;
+            UpdateScale();
+        }
+
         private void OnPointerExit(BaseEventData data) {
-            if (Interactable) {
-                transform.DOScale(_originalScale, 0.2f).SetEase(Ease.OutQuad);
-            }
+            _isHovered = false;
+            UpdateScale();
         }
 
         private void OnPointerDown(BaseEventData data) {
@@ -106,16 +123,7 @@ namespace GroupMainMenu {
         }
 
         private void OnPointerUp(BaseEventData data) {
-            if (Interactable) {
-                var pointerData = data as PointerEventData;
-                bool isHovering = pointerData != null && pointerData.pointerEnter == button.gameObject;
-
-                if (isHovering) {
-                     transform.DOScale(_originalScale * 1.05f, 0.1f).SetEase(Ease.OutQuad);
-                } else {
-                     transform.DOScale(_originalScale, 0.1f).SetEase(Ease.OutQuad);
-                }
-            }
+            UpdateScale(0.1f);
         }
 
         public void SetOnClickedCallback(System.Action callback) {
