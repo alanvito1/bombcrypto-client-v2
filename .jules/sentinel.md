@@ -7,3 +7,8 @@
 **Vulnerability:** DefaultClaimManager constructed URLs by directly concatenating user account identifiers, allowing for potential path traversal or query parameter injection if the identifier contained special characters.
 **Learning:** Even seemingly safe identifiers like wallet addresses or usernames should be treated as untrusted input when constructing URLs, as they might be manipulated or contain unexpected characters.
 **Prevention:** Always use Uri.EscapeDataString() when inserting dynamic values into URL paths or query strings.
+
+## 2024-10-16 - [Sensitive Data Leak in URL Logging]
+**Vulnerability:** `Utils.ExecuteWebRequestWithRetry` logged full URLs, including sensitive query parameters (e.g., `token`, `key`), which were not covered by the existing JSON body redaction logic.
+**Learning:** Redaction must be applied to all parts of a request log, including the URL, not just the body. Regex patterns for JSON do not work for URL query strings.
+**Prevention:** Implement dedicated URL redaction logic that strips values of known sensitive keys in query parameters before logging.

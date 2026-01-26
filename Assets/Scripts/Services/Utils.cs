@@ -291,7 +291,7 @@ namespace App {
             long lastResponseCode = 0;
             string lastResult = "";
 
-            logManager.Log($"{methodType} Web Request: {url}");
+            logManager.Log($"{methodType} Web Request: {RedactUrl(url)}");
             if (logBody != null) logManager.Log($"{methodType} body: {RedactSensitiveData(logBody)}");
             if (logHeaderTitle != null) logManager.Log($"{methodType} header: {logHeaderTitle} {(IsSensitiveHeader(logHeaderTitle) ? "***" : logHeaderContent)}");
 
@@ -312,7 +312,7 @@ namespace App {
                 bool shouldRetry = request.result == UnityWebRequest.Result.ConnectionError || is5xx;
 
                 if (shouldRetry && i < maxRetries) {
-                    logManager.Log($"{methodType} Retry {i+1}/{maxRetries} for {url} (Code: {lastResponseCode})");
+                    logManager.Log($"{methodType} Retry {i+1}/{maxRetries} for {RedactUrl(url)} (Code: {lastResponseCode})");
                     await WebGLTaskDelay.Instance.Delay(delay);
                     delay *= 2;
                     continue;
@@ -346,6 +346,20 @@ namespace App {
 
                     var keyPart = m.Value.Substring(0, separatorIndex + 1);
                     return $"{keyPart} \"***\"";
+                }, RegexOptions.IgnoreCase);
+            } catch (Exception) {
+                return input;
+            }
+        }
+
+        private static string RedactUrl(string input) {
+            if (string.IsNullOrEmpty(input)) return input;
+            try {
+                // Regex for URL query parameters
+                // Matches parameter=value where parameter is one of the sensitive keys
+                var pattern = @"([?&])(password|token|access_token|refresh_token|secret|signature|key|wallet_hex|private_key|input_token)=([^&]*)";
+                return Regex.Replace(input, pattern, m => {
+                    return $"{m.Groups[1].Value}{m.Groups[2].Value}=***";
                 }, RegexOptions.IgnoreCase);
             } catch (Exception) {
                 return input;
