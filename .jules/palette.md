@@ -5,3 +5,7 @@
 ## 2026-10-24 - Base Class UI Inheritance
 **Learning:** Adding programmatic `EventTrigger` logic to a base UI class (`MMButton`) effectively centralizes interaction feedback (like hover scale) regardless of prefab structure, but requires strict adherence to `base.Awake()` calls in derived classes (`MainMenuButton`) to function.
 **Action:** Always verify derived classes call `base.Awake()` when enhancing base class initialization logic.
+
+## 2026-10-25 - Unified Input Feedback
+**Learning:** Separating hover and selection states in UI buttons (`MMButton`) causes conflict where keyboard focus is lost when the mouse moves.
+**Action:** Use a centralized `UpdateScale()` method that checks `_isHovered || _isSelected` to ensure consistent visual feedback across all input methods.
