@@ -68,9 +68,14 @@ namespace Engine.Entities {
         private float _elapsed;
         private float _duration;
 
+        private Collider2D _collider;
+        private readonly RaycastHit2D[] _raycastResults = new RaycastHit2D[5];
+
         #region UNITY EVENTS
 
         protected virtual void Awake() {
+            _collider = GetComponent<Collider2D>();
+
             var damageReceiver = GetComponent<DamageReceiver>();
             if (damageReceiver != null) {
                 damageReceiver.SetOnTakeDamage(TakeDamage);
@@ -165,12 +170,16 @@ namespace Engine.Entities {
         
         private void PlayScaleAnimator() {
             sprite.sprite = resource.GetSpriteBombSkin((EnemyBombSkin) BombSkin);
-            _animator = body.GetComponent<Animator>();
+
+            // Optimization: Cache _animator and _animatorHelper to avoid repetitive GetComponent calls and allocations
             if (_animator == null) {
-                _animator = body.AddComponent<Animator>();
+                _animator = body.GetComponent<Animator>();
+                if (_animator == null) {
+                    _animator = body.AddComponent<Animator>();
+                }
+                _animator.runtimeAnimatorController = scaleAnimator;
+                _animatorHelper = new AnimatorHelper(_animator);
             }
-            _animator.runtimeAnimatorController = scaleAnimator;
-            _animatorHelper = new AnimatorHelper(_animator);
             _animatorHelper.Enabled = true;
         }
 
@@ -205,9 +214,10 @@ namespace Engine.Entities {
         }
 
         public void CheckOnBomb() {
-            var hitArray = Physics2D.RaycastAll(transform.position, Vector2.right, 0.1f);
-            if (hitArray.Length <= 1) {
-                GetComponent<Collider2D>().isTrigger = false;
+            // Optimization: Use NonAlloc to avoid garbage collection
+            var hitCount = Physics2D.RaycastNonAlloc(transform.position, Vector2.right, _raycastResults, 0.1f);
+            if (hitCount <= 1) {
+                _collider.isTrigger = false;
             }
         }
 
