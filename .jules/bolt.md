@@ -9,3 +9,7 @@
 ## 2024-10-26 - StringBuilder for Frequent String Updates
 **Learning:** `TimeUtil` methods used string concatenation (`+=`) in conditionals, which creates excessive garbage in frequent updates (like UI timers).
 **Action:** Use `StringBuilder` for helper methods that construct strings dynamically, especially if likely to be called every frame or second.
+
+## 2024-10-27 - RaycastNonAlloc and Pooled Initialization
+**Learning:** `Physics2D.RaycastAll` allocates a new array every call, causing GC pressure in hot paths. Also, custom helpers like `AnimatorHelper` may perform hidden allocations (LINQ) in their constructors, making them expensive to re-create in pooled objects' `Init` methods.
+**Action:** Use `Physics2D.RaycastNonAlloc` with a pre-allocated buffer. Cache helper objects and components in pooled entities to avoid re-initialization costs.
