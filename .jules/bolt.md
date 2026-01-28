@@ -13,3 +13,7 @@
 ## 2024-10-27 - RaycastNonAlloc and Pooled Initialization
 **Learning:** `Physics2D.RaycastAll` allocates a new array every call, causing GC pressure in hot paths. Also, custom helpers like `AnimatorHelper` may perform hidden allocations (LINQ) in their constructors, making them expensive to re-create in pooled objects' `Init` methods.
 **Action:** Use `Physics2D.RaycastNonAlloc` with a pre-allocated buffer. Cache helper objects and components in pooled entities to avoid re-initialization costs.
+
+## 2024-10-27 - Cache Frequent Components in Base Entity
+**Learning:** Collisions are high-frequency events. `DamageListener` was calling `GetComponent<DamageDealer>` and `GetComponent<DamageReceiver>` on every collision, causing O(N) lookup overhead.
+**Action:** Added lazy-loaded cached properties (`DamageDealer`, `DamageReceiver`) to the base `Entity` class. This reduces the cost to O(1) after the first access, significantly optimizing the physics/combat loop.

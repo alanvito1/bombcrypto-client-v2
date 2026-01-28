@@ -8,6 +8,7 @@ using CodeStage.AntiCheat.ObscuredTypes;
 
 using DG.Tweening;
 
+using Engine.Components;
 using IEntityComponent = Engine.Components.IEntityComponent;
 
 namespace Engine.Entities {
@@ -24,6 +25,33 @@ namespace Engine.Entities {
         public ObscuredBool Immortal { get; set; } = false;
 
         private readonly ComponentContainer _componentContainer = new ComponentContainer();
+
+        private DamageDealer _damageDealer;
+        private bool _damageDealerCached;
+
+        // Optimization: Cache component to avoid expensive GetComponent calls in hot paths (e.g. Collision)
+        public DamageDealer DamageDealer {
+            get {
+                if (!_damageDealerCached) {
+                    _damageDealer = GetComponent<DamageDealer>();
+                    _damageDealerCached = true;
+                }
+                return _damageDealer;
+            }
+        }
+
+        private DamageReceiver _damageReceiver;
+        private bool _damageReceiverCached;
+
+        public DamageReceiver DamageReceiver {
+            get {
+                if (!_damageReceiverCached) {
+                    _damageReceiver = GetComponent<DamageReceiver>();
+                    _damageReceiverCached = true;
+                }
+                return _damageReceiver;
+            }
+        }
 
         private void OnDestroy() {
             DOTween.Kill(transform, true);
