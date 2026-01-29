@@ -291,9 +291,11 @@ namespace App {
             long lastResponseCode = 0;
             string lastResult = "";
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             logManager.Log($"{methodType} Web Request: {url}");
             if (logBody != null) logManager.Log($"{methodType} body: {RedactSensitiveData(logBody)}");
             if (logHeaderTitle != null) logManager.Log($"{methodType} header: {logHeaderTitle} {(IsSensitiveHeader(logHeaderTitle) ? "***" : logHeaderContent)}");
+#endif
 
             for (int i = 0; i <= maxRetries; i++) {
                 using var request = createRequest();
@@ -304,7 +306,9 @@ namespace App {
                 lastResult = request.downloadHandler?.text ?? request.error ?? "";
 
                 if (request.result == UnityWebRequest.Result.Success) {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                      logManager.Log($"result = ({lastResponseCode}, {RedactSensitiveData(lastResult)})");
+#endif
                      return (lastResponseCode, lastResult);
                 }
 
@@ -312,7 +316,9 @@ namespace App {
                 bool shouldRetry = request.result == UnityWebRequest.Result.ConnectionError || is5xx;
 
                 if (shouldRetry && i < maxRetries) {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                     logManager.Log($"{methodType} Retry {i+1}/{maxRetries} for {url} (Code: {lastResponseCode})");
+#endif
                     await WebGLTaskDelay.Instance.Delay(delay);
                     delay *= 2;
                     continue;
@@ -321,7 +327,9 @@ namespace App {
                 break;
             }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             logManager.Log($"result = ({lastResponseCode}, {RedactSensitiveData(lastResult)})");
+#endif
             return (lastResponseCode, lastResult);
         }
 
@@ -331,14 +339,17 @@ namespace App {
                    header.Equals("X-Auth-Token", StringComparison.OrdinalIgnoreCase);
         }
 
+        private static readonly Regex SensitiveDataRegex = new Regex(
+            @"""(password|newPassword|token|access_token|refresh_token|secret|signature|key|wallet_hex|private_key|input_token|email)""\s*:\s*""(?:[^""\\]|\\.)*""",
+            RegexOptions.IgnoreCase);
+
         private static string RedactSensitiveData(string input) {
             if (string.IsNullOrEmpty(input)) return input;
             try {
                 // Regex to find keys like "password", "token", etc., and replace their values.
                 // Matches "key": "value" where value is a double-quoted string.
                 // Handles escaped quotes in the value.
-                var pattern = @"""(password|newPassword|token|access_token|refresh_token|secret|signature|key|wallet_hex|private_key|input_token|email)""\s*:\s*""(?:[^""\\]|\\.)*""";
-                return Regex.Replace(input, pattern, m => {
+                return SensitiveDataRegex.Replace(input, m => {
                     // Reconstruct key: "***"
                     // The key part includes the quotes and potentially whitespace
                     var separatorIndex = m.Value.IndexOf(':');
@@ -346,7 +357,7 @@ namespace App {
 
                     var keyPart = m.Value.Substring(0, separatorIndex + 1);
                     return $"{keyPart} \"***\"";
-                }, RegexOptions.IgnoreCase);
+                });
             } catch (Exception) {
                 return input;
             }

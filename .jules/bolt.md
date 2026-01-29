@@ -17,3 +17,7 @@
 ## 2024-10-27 - Cache Frequent Components in Base Entity
 **Learning:** Collisions are high-frequency events. `DamageListener` was calling `GetComponent<DamageDealer>` and `GetComponent<DamageReceiver>` on every collision, causing O(N) lookup overhead.
 **Action:** Added lazy-loaded cached properties (`DamageDealer`, `DamageReceiver`) to the base `Entity` class. This reduces the cost to O(1) after the first access, significantly optimizing the physics/combat loop.
+
+## 2024-10-28 - Strip Expensive Logging in Release
+**Learning:** `Utils.ExecuteWebRequestWithRetry` performed string interpolation and expensive regex redaction (`RedactSensitiveData`) for logging on every request, even in Release builds where logs are suppressed. Arguments to `Log()` are evaluated before the method call, causing hidden allocations.
+**Action:** Wrapped logging calls with `#if UNITY_EDITOR || DEVELOPMENT_BUILD` to completely strip execution from Production builds. Also cached the `Regex` instance to optimize Dev builds.
