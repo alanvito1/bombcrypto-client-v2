@@ -9,12 +9,12 @@ using UnityEngine;
 namespace Engine.Collision {
     public class EncounterListener : ICollisionListener {
         public void OnCollisionEntered(Entity entity, Entity otherEntity, Vector2 position, IEntityManager manager) {
-            if (entity is Player) {
-                var walkThrough = entity.GetEntityComponent<WalkThrough>();
+            if (entity is Player player) {
+                var walkThrough = player.WalkThrough;
                 if (walkThrough != null) {
                     walkThrough.HitObstacle(otherEntity);
                 } else {
-                    var movable = entity.GetEntityComponent<Movable>();
+                    var movable = player.Movable;
                     if (movable != null) {
                         movable.ForceStop();
                     }
@@ -53,11 +53,19 @@ namespace Engine.Collision {
                     return;
                 }
 
-                var walkThrough = entity.GetEntityComponent<WalkThrough>();
+                WalkThrough walkThrough = null;
+                Movable movable = null;
+                if (entity is Player p) {
+                    walkThrough = p.WalkThrough;
+                    movable = p.Movable;
+                } else if (entity is Enemy e) {
+                    walkThrough = e.WalkThrough;
+                    movable = e.Movable;
+                }
+
                 if (walkThrough != null) {
                     walkThrough.HitObstacle(otherEntity);
                 } else {
-                    var movable = entity.GetEntityComponent<Movable>();
                     if (movable != null) {
                         movable.ForceStop();
                     }
@@ -84,26 +92,23 @@ namespace Engine.Collision {
                 }
             }
 
-            if (entity is Bomb) {
+            if (entity is Bomb bomb) {
                 if (otherEntity is Border) {
-                    var movable = entity.GetEntityComponent<Movable>();
+                    var movable = bomb.Movable;
                     if (movable != null) {
                         movable.ForceStop();
                     }
-                } else if (otherEntity is Bomb) {
-                    var bomb1 = entity as Bomb;
-                    var bomb2 = otherEntity as Bomb;
-                    if (bomb1.GroupId != "" && bomb2.GroupId != "") {
-                        if (bomb1.GroupId == bomb2.GroupId) {
-                            var movable1 = entity.GetEntityComponent<Movable>();
-                            var movable2 = otherEntity.GetEntityComponent<Movable>();
+                } else if (otherEntity is Bomb bomb2) {
+                    if (bomb.GroupId != "" && bomb2.GroupId != "") {
+                        if (bomb.GroupId == bomb2.GroupId) {
+                            var movable1 = bomb.Movable;
+                            var movable2 = bomb2.Movable;
                             if (movable1.VelocityPhysics == Vector2.zero) {
                                 movable2.ForceStop();
                             }
                         }
                     }
                 } else if (otherEntity is Player) {
-                    var bomb = (Bomb) entity;
                     if (bomb.IsEnemy && !bomb.IsThroughHero) {
                         bomb.StartExplode(bomb.transform.localPosition);
                     }
