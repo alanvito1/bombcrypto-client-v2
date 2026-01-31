@@ -1,4 +1,4 @@
-﻿using CreativeSpore.SuperTilemapEditor;
+using CreativeSpore.SuperTilemapEditor;
 using Engine.Entities;
 using UnityEngine;
 
@@ -11,19 +11,21 @@ namespace Engine.Utils
             var rigidBody = collider.attachedRigidbody;
             if (rigidBody != null)
             {
-                var entity = rigidBody.GetComponent<Entity>();
-                if (entity != null)
+                // Bolt: Optimize GetComponent with TryGetComponent to reduce allocation
+                if (rigidBody.TryGetComponent<Entity>(out var entity))
                 {
                     return entity;
                 }
             }
             // Tilemap.
-            var chunk = collider.GetComponent<TilemapChunk>();
-            if (chunk != null)
+            // Bolt: Optimize GetComponent with TryGetComponent
+            if (collider.TryGetComponent<TilemapChunk>(out var chunk))
             {
                 var tilemap = chunk.ParentTilemap;
-                var entity = tilemap.GetComponent<Entity>();
-                return entity;
+                if (tilemap.TryGetComponent<Entity>(out var entity))
+                {
+                    return entity;
+                }
             }
             return null;
         }
@@ -32,13 +34,13 @@ namespace Engine.Utils
 
         public static Collider2D GetCollider(Entity entity)
         {
-            var collider = entity.GetComponent<Collider2D>();
-            if (collider != null)
+            // Bolt: Optimize GetComponent with TryGetComponent
+            if (entity.TryGetComponent<Collider2D>(out var collider))
             {
                 return collider;
             }
-            var rigidBody = entity.GetComponent<Rigidbody2D>();
-            if (rigidBody != null)
+            // Bolt: Optimize GetComponent with TryGetComponent
+            if (entity.TryGetComponent<Rigidbody2D>(out var rigidBody))
             {
                 var count = rigidBody.GetAttachedColliders(Colliders);
                 if (count > 0)
@@ -47,16 +49,18 @@ namespace Engine.Utils
                 }
             }
             // Tilemap.
-            var tilemap = entity.GetComponent<STETilemap>();
-            if (tilemap != null)
+            // Bolt: Optimize GetComponent with TryGetComponent
+            if (entity.TryGetComponent<STETilemap>(out var tilemap))
             {
                 if (tilemap.transform.childCount > 0)
                 {
-                    var chunk = tilemap.transform.GetChild(0).GetComponent<TilemapChunk>();
-                    if (chunk != null)
+                    // Bolt: Optimize GetComponent with TryGetComponent
+                    if (tilemap.transform.GetChild(0).TryGetComponent<TilemapChunk>(out var chunk))
                     {
-                        collider = chunk.GetComponent<Collider2D>();
-                        return collider;
+                        if (chunk.TryGetComponent<Collider2D>(out collider))
+                        {
+                            return collider;
+                        }
                     }
                 }
             }
