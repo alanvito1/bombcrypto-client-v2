@@ -96,7 +96,7 @@ namespace Engine.Manager {
             }
 
             // Assign Collision Listener
-            var detector = entity.GetComponent<CollisionDetector>();
+            var detector = entity.CollisionDetector;
             if (detector != null) {
                 detector.SetTriggerEntered(collisionBegin);
                 detector.SetTriggerExited(collisionEnd);
@@ -131,7 +131,7 @@ namespace Engine.Manager {
                 updater.End();
             }
 
-            var detector = entity.GetComponent<CollisionDetector>();
+            var detector = entity.CollisionDetector;
             if (detector != null) {
                 detector.SetTriggerEntered(null);
                 detector.SetTriggerExited(null);
@@ -325,7 +325,7 @@ namespace Engine.Manager {
 
                 RemoveEntity(entity);
 
-                var poolable = entity.GetComponent<Poolable>();
+                var poolable = entity.Poolable;
                 if (poolable == null) {
                     UnityEngine.Object.Destroy(entity.gameObject);
                 } else {

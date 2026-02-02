@@ -53,6 +53,32 @@ namespace Engine.Entities {
             }
         }
 
+        private CollisionDetector _collisionDetector;
+        private bool _collisionDetectorCached;
+
+        public CollisionDetector CollisionDetector {
+            get {
+                if (!_collisionDetectorCached) {
+                    _collisionDetector = GetComponent<CollisionDetector>();
+                    _collisionDetectorCached = true;
+                }
+                return _collisionDetector;
+            }
+        }
+
+        private Poolable _poolable;
+        private bool _poolableCached;
+
+        public Poolable Poolable {
+            get {
+                if (!_poolableCached) {
+                    _poolable = GetComponent<Poolable>();
+                    _poolableCached = true;
+                }
+                return _poolable;
+            }
+        }
+
         private void OnDestroy() {
             DOTween.Kill(transform, true);
         }
