@@ -21,3 +21,7 @@
 ## 2024-10-28 - Strip Expensive Logging in Release
 **Learning:** `Utils.ExecuteWebRequestWithRetry` performed string interpolation and expensive regex redaction (`RedactSensitiveData`) for logging on every request, even in Release builds where logs are suppressed. Arguments to `Log()` are evaluated before the method call, causing hidden allocations.
 **Action:** Wrapped logging calls with `#if UNITY_EDITOR || DEVELOPMENT_BUILD` to completely strip execution from Production builds. Also cached the `Regex` instance to optimize Dev builds.
+
+## 2024-06-01 - FrameTabScrollBase Initialization Optimization
+**Learning:** `InitSegments` in `FrameTabScrollBase` was polling repeatedly in `LateUpdate` waiting for layout, doing `GetComponent<RectTransform>` and `LINQ.Last()` every frame.
+**Action:** Optimized by caching the viewport RectTransform and using the cached `Rect` property of `CSegment` (inherited from `SegmentBase`). Replaced `LINQ.Last()` with array indexing to avoid allocations.

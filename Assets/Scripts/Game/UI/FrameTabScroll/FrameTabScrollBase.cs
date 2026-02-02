@@ -29,6 +29,7 @@ namespace Game.UI.FrameTabScroll {
         protected bool IsInitSegments => _isInitSegments;
 
         private CSegment[] _segments = null;
+        private RectTransform _viewportRectTransform;
         private Dictionary<TabMenu, CTabMenu> _dicTabs;
         private Dictionary<TabMenu, CSegment> _dicSegments;
         protected Dictionary<TabMenu, CSegment> DicSegments => _dicSegments;
@@ -85,9 +86,19 @@ namespace Game.UI.FrameTabScroll {
         private bool InitSegments() {
             _segments = segmentList.GetComponentsInChildren<CSegment>();
             // this._segments = this.GetSegmentList();
-            _cSegmentsLast = _segments.Last();
-            var viewportSize = segmentList.transform.parent.GetComponent<RectTransform>().rect;
-            var sizeLastSegment = _cSegmentsLast.gameObject.GetComponent<RectTransform>().sizeDelta;
+            if (_segments.Length == 0) return false;
+            _cSegmentsLast = _segments[_segments.Length - 1];
+
+            if (_viewportRectTransform == null) {
+                var parent = segmentList.parent;
+                if (parent != null) {
+                    _viewportRectTransform = parent.GetComponent<RectTransform>();
+                }
+            }
+            if (_viewportRectTransform == null) return false;
+
+            var viewportSize = _viewportRectTransform.rect;
+            var sizeLastSegment = _cSegmentsLast.Rect.sizeDelta;
             var ySegmentsLast = _cSegmentsLast.transform.localPosition.y;
             var viewportSizeHeight = viewportSize.height;
             if (Math.Abs(ySegmentsLast) <= viewportSizeHeight) {
@@ -112,8 +123,12 @@ namespace Game.UI.FrameTabScroll {
         //Call after hide an Segment 
         protected void ReloadSegmentsLast() {
             _segments = segmentList.GetComponentsInChildren<CSegment>();
-            _cSegmentsLast = _segments.Last();
-            var viewportSize = segmentList.transform.parent.GetComponent<RectTransform>().rect;
+            if (_segments.Length > 0) {
+                _cSegmentsLast = _segments[_segments.Length - 1];
+            } else {
+                _cSegmentsLast = null;
+            }
+
             var isFindTabFirst = true;
             foreach (var tab in _dicTabs.Where(tab => tab.Value.gameObject.activeSelf)) {
                 if (isFindTabFirst) {
