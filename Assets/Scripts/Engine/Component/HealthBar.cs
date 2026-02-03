@@ -12,15 +12,19 @@ namespace Engine.UI {
 
         private bool _showWhenFull;
         private bool _showHealthBar;
+        private Transform _barTransform;
 
         private void Awake() {
+            // Cache transform to avoid .transform extern call overhead in UpdateProgress
+            _barTransform = bar.transform;
             _progress = 1;
             _showHealthBar = true;
             SetVisible(_showWhenFull);
         }
 
         public void SetColor(Color color) {
-            bar.GetComponent<SpriteRenderer>().color = color;
+            // Optimized: Use existing reference instead of redundant GetComponent<SpriteRenderer>()
+            bar.color = color;
         }
 
         public void SetShowHealthBar(bool value) {
@@ -52,10 +56,9 @@ namespace Engine.UI {
             var barWidth = 0.8f * _progress;
             bar.size = new Vector2(barWidth, bar.size.y);
 
-            var barTransform = bar.transform;
-            var position = barTransform.localPosition;
+            var position = _barTransform.localPosition;
             position.x = (barWidth / 2) - 0.4f;
-            barTransform.localPosition = position;
+            _barTransform.localPosition = position;
         }
 
         private void SetVisible(bool visible) {
