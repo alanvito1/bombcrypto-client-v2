@@ -10,7 +10,15 @@ namespace PvpMode.Component {
         [SerializeField]
         private Text valueText;
 
+        // Optimization: Cached RectTransform to avoid GetComponent calls in UpdateDisplay
+        private RectTransform _valueTextRect;
         private double _value;
+
+        private void Awake() {
+            if (valueText != null) {
+                _valueTextRect = valueText.GetComponent<RectTransform>();
+            }
+        }
 
         public void SetValue(double value, bool isCounter = false) {
             if (Math.Abs(_value - value) < Mathf.Epsilon) {
@@ -33,7 +41,12 @@ namespace PvpMode.Component {
         }
         
         private void UpdateDisplay(int valueFrom, int valueTo, System.Action callback) {
-            var valueTextRect = valueText.GetComponent<RectTransform>();
+            var valueTextRect = _valueTextRect;
+            if (valueTextRect == null) {
+                valueTextRect = valueText.GetComponent<RectTransform>();
+                _valueTextRect = valueTextRect;
+            }
+
             var zoomIn = valueTextRect.DOScale(1.4f, 0.2f);
             var running = DOTween.To(() => valueFrom, x => valueText.text = App.Utils.FormatBcoinValue(x), valueTo, 1);
             var zoomOut = valueTextRect.DOScale(1, 0.2f);
