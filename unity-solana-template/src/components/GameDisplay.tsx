@@ -7,6 +7,7 @@ import { EnvConfig } from "../configs/EnvConfig.ts";
 import { unityService } from "../hooks/GlobalServices.ts";
 import { UnityInstance } from "react-unity-webgl/declarations/unity-instance";
 import { StyleContext } from "./StyleContext.tsx";
+import { debounce } from "../utils/Debounce.ts";
 
 declare global {
     interface Window {

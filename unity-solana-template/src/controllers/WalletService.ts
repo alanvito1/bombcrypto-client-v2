@@ -2,11 +2,13 @@ import Logger from "./Logger.ts";
 import {Provider} from "@reown/appkit-adapter-solana";
 import {sleep} from "../utils/Time.ts";
 import {
+    ComputeBudgetProgram,
     Connection,
     LAMPORTS_PER_SOL,
     PublicKey,
     SystemProgram,
     Transaction,
+    TransactionInstruction,
     TransactionSignature
 } from "@solana/web3.js";
 
@@ -25,6 +27,7 @@ const TAG = '[WS]';
 const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+const ESTIMATED_FEE = 5000;
 
 export default class WalletService {
     constructor(
@@ -159,14 +162,18 @@ export default class WalletService {
 
             const balance = await this._connection.getBalance(fromAddress);
             this._logger.log(`Your Balance: ${balance / LAMPORTS_PER_SOL} SOL`);
-            if (balance < lamports) {
+            // SECURITY: Check balance including estimated fee
+            if (balance < lamports + ESTIMATED_FEE) {
                 this._logger.error(`Insufficient balance`);
-                this._notificationService.showError(`Insufficient balance, you need at least ${solAmount} SOL in your account.`);
+                this._notificationService.showError(`Insufficient balance, you need at least ${solAmount} SOL + fee in your account.`);
                 return null;
             }
 
             const latestBlockchain = await this._connection.getLatestBlockhash("confirmed");
+            const priorityFeeIx = await this.getPriorityFeeInstruction(this._connection);
+
             const transaction = new Transaction().add(
+                priorityFeeIx,
                 createMemoInstruction(depositMessage),
                 SystemProgram.transfer({
                     fromPubkey: fromAddress,
@@ -211,6 +218,14 @@ export default class WalletService {
             
             const lamports = Math.floor(LAMPORTS_PER_SOL * bcoinAmount);
 
+            // SECURITY: Check SOL balance for gas
+            const balanceSOL = await this._connection.getBalance(fromAddress);
+            if (balanceSOL < ESTIMATED_FEE) {
+                this._logger.error(`Insufficient SOL for gas`);
+                this._notificationService.showError(`Insufficient SOL for gas fee.`);
+                return null;
+            }
+
             const balance = await this.getBcoinBalance(fromAddress);
             if (!balance) {
                 this._logger.error(`Cannot get Bcoin balance`);
@@ -225,7 +240,10 @@ export default class WalletService {
             }
 
             const latestBlockchain = await this._connection.getLatestBlockhash("confirmed");
+            const priorityFeeIx = await this.getPriorityFeeInstruction(this._connection);
+
             const transaction = new Transaction().add(
+                priorityFeeIx,
                 createMemoInstruction(depositMessage),
                 createTransferInstruction(
                     this.getTokenAccount(fromAddress),
@@ -305,6 +323,29 @@ export default class WalletService {
         this._onWalletDisconnect.forEach(cb => cb());
         this._logger.log(`${TAG} onWalletDisconnected`);
         this._notificationService.showError("You're logging out of your wallet.");
+    }
+
+    private async getPriorityFeeInstruction(connection: Connection): Promise<TransactionInstruction> {
+        // GAS: Calculate optimal priority fee to ensure transaction inclusion
+        try {
+            const recentFees = await connection.getRecentPrioritizationFees();
+            // Use median or safe default if no data
+            let priorityFee = ESTIMATED_FEE;
+            if (recentFees && recentFees.length > 0) {
+                const fees = recentFees.map(f => f.prioritizationFee).sort((a, b) => a - b);
+                const median = fees[Math.floor(fees.length / 2)];
+                if (median > 0) priorityFee = median;
+            }
+
+            return ComputeBudgetProgram.setComputeUnitPrice({
+                microLamports: priorityFee
+            });
+        } catch (e) {
+            this._logger.error(`${TAG} Failed to get priority fee, using default: ${e}`);
+            return ComputeBudgetProgram.setComputeUnitPrice({
+                microLamports: ESTIMATED_FEE
+            });
+        }
     }
 
     private async generateStringToSign(nonceString: string): Promise<string> {
