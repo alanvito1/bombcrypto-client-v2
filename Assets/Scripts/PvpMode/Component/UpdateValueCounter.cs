@@ -11,6 +11,14 @@ namespace PvpMode.Component {
         private Text valueText;
 
         private double _value;
+        private RectTransform _rectTransform;
+        private Sequence _sequence;
+
+        private void Awake() {
+            if (valueText != null) {
+                _rectTransform = valueText.GetComponent<RectTransform>();
+            }
+        }
 
         public void SetValue(double value, bool isCounter = false) {
             if (Math.Abs(_value - value) < Mathf.Epsilon) {
@@ -33,12 +41,22 @@ namespace PvpMode.Component {
         }
         
         private void UpdateDisplay(int valueFrom, int valueTo, System.Action callback) {
-            var valueTextRect = valueText.GetComponent<RectTransform>();
+            // OPTIMIZATION: Kill previous sequence to prevent overlapping animations and CPU waste
+            _sequence?.Kill();
+
+            var valueTextRect = _rectTransform;
+            if (valueTextRect == null) {
+                // Fallback: Cache the RectTransform if it wasn't captured in Awake (e.g., dynamically assigned)
+                valueTextRect = valueText.GetComponent<RectTransform>();
+                _rectTransform = valueTextRect;
+            }
+
             var zoomIn = valueTextRect.DOScale(1.4f, 0.2f);
             var running = DOTween.To(() => valueFrom, x => valueText.text = App.Utils.FormatBcoinValue(x), valueTo, 1);
             var zoomOut = valueTextRect.DOScale(1, 0.2f);
 
-            DOTween.Sequence()
+            _sequence = DOTween.Sequence();
+            _sequence
                 .Append(zoomIn)
                 .Append(running)
                 .Append(zoomOut)
