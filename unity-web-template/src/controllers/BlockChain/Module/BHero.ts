@@ -138,7 +138,7 @@ export default class BHeroToken extends NFTToken {
             }
             const countBN = ethers.toBigInt(count);
             const costBN = ethers.toBigInt(cost);
-            await coinToken.checkAllowance(userAddress, this._address, (costBN * countBN));
+            await coinToken.ensureAllowance(userAddress, this._address, (costBN * countBN));
 
             const contract = await this.getContract();
             const estimateGas = await contract.mint.estimateGas(count, category);
@@ -298,7 +298,7 @@ export default class BHeroToken extends NFTToken {
             const cost = await this.getUpgradeCost(5, 3);
             const multiplier = ethers.toBigInt(HERO_S_PRICE_MULTIPLIER);
             const costBN = ethers.toBigInt(cost) * multiplier;
-            await this._bcoinToken.checkAllowance(userAddress, this._address, costBN);
+            await this._bcoinToken.ensureAllowance(userAddress, this._address, costBN);
 
             const contract = await this.getContract();
             const estimateGas = await contract.upgrade.estimateGas(baseId, materialId);
@@ -323,7 +323,7 @@ export default class BHeroToken extends NFTToken {
             const cost = await this.getRandomizeAbilityCost(5, 10);
             const multiplier = ethers.toBigInt(HERO_S_PRICE_MULTIPLIER);
             const costBN = ethers.toBigInt(cost) * multiplier;
-            await this._bcoinToken.checkAllowance(userAddress, this._address, costBN);
+            await this._bcoinToken.ensureAllowance(userAddress, this._address, costBN);
 
             const contract = await this.getContract();
             const estimateGas = await contract.randomizeAbilities.estimateGas(heroId);

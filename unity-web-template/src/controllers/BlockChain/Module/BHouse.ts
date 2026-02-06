@@ -61,7 +61,7 @@ export default class BHouseToken extends NFTToken {
     async mint(userAddress: string, rarity: number): Promise<boolean> {
         try {
             const cost = await this.getMintCost(rarity);
-            await this._bcoinToken.checkAllowance(userAddress, this._address, BigInt(cost));
+            await this._bcoinToken.ensureAllowance(userAddress, this._address, BigInt(cost));
 
             const contract: Contract = await this.getContract();
             const estimateGas = await contract.mint.estimateGas(rarity);

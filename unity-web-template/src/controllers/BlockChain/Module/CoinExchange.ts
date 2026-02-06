@@ -41,7 +41,7 @@ export default class CoinExchange extends GeneralContract {
     async buyTokens(amount: number, category: number, userAddress: string): Promise<Message.Message> {
         try {
             const amountBN = this.parseAmount(amount, category);
-            await this._otherToken.approveMaximum(userAddress, this._address, amountBN);
+            await this._otherToken.ensureAllowance(userAddress, this._address, amountBN);
 
             const contract: Contract = await this.getContract();
             const tokenAddress: string = this.getTokenAddress(category);

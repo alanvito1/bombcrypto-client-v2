@@ -1,5 +1,5 @@
 import GeneralContract from './Utils/GeneralContract.js';
-import { ethers, MaxUint256, parseUnits} from "ethers";
+import { parseUnits } from "ethers";
 
 export default class CoinToken extends GeneralContract {
     async getBalance(userAddress: string): Promise<string> {
@@ -17,17 +17,17 @@ export default class CoinToken extends GeneralContract {
      * @param amount - The amount to approve
      * @returns A promise that resolves to a boolean indicating success
      */
-    async approveMaximum(userAddress: string, spenderAddress: string, amount: bigint): Promise<boolean> {
+    async ensureAllowance(userAddress: string, spenderAddress: string, amount: bigint): Promise<boolean> {
         const allowance = await this.getAllowance(userAddress, spenderAddress);
         if (amount <= allowance) {
             return true;
         }
-        const maxAmount = MaxUint256;
+        // SECURITY: Approve only the required amount to prevent fund draining risks.
         const contract = await this.getContract();
         if (!contract) {
             throw new Error('Contract is not initialized');
         }
-        const transaction = await contract.approve(spenderAddress, maxAmount);
+        const transaction = await contract.approve(spenderAddress, amount);
         await transaction.wait();
         return true;
     }
@@ -53,15 +53,5 @@ export default class CoinToken extends GeneralContract {
         }
         const transaction = await contract.approve(spenderAddress, wei);
         await transaction.wait();
-    }
-
-    async checkAllowance(userAddress: string, address: string, amount: bigint): Promise<void> {
-        const allowance = await this.getAllowance(userAddress, address);
-        const amountBN = ethers.toBigInt(amount);
-        if (amountBN <= allowance) {
-            return;
-        }
-        const multiplier = ethers.toBigInt(10);
-        await this.approve(address, (amountBN * multiplier).toString());
     }
 }

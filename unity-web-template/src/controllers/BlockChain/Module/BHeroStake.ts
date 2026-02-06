@@ -15,13 +15,13 @@ export default class BHeroStake extends GeneralContract {
 
     async checkAllowance(userAddress: string, amount: bigint): Promise<void> {
         const address = this._address;
-        await this._bcoinToken.checkAllowance(userAddress, address, amount);
+        await this._bcoinToken.ensureAllowance(userAddress, address, amount);
     }
 
     async depositCoinIntoHeroId(userAddress: string, id: number, amount: number): Promise<boolean> {
         try {
             const amountBN = parseEther(amount.toString());
-            await this._bcoinToken.approveMaximum(userAddress, this._address, amountBN);
+            await this._bcoinToken.ensureAllowance(userAddress, this._address, amountBN);
             const contract = await this.getContract();
             const transaction = await contract.depositCoinIntoHeroId(id, amountBN);
             await waitForReceipt(transaction);
@@ -35,7 +35,7 @@ export default class BHeroStake extends GeneralContract {
     async withdrawCoinFromHeroId(userAddress: string, id: number, amount: number): Promise<boolean> {
         try {
             const amountBN = parseEther(amount.toString());
-            await this._bcoinToken.approveMaximum(userAddress, this._address, amountBN);
+            await this._bcoinToken.ensureAllowance(userAddress, this._address, amountBN);
             const contract = await this.getContract();
             const transaction = await contract.withdrawCoinFromHeroId(id, amountBN);
             await waitForReceipt(transaction);
@@ -81,7 +81,7 @@ export default class BHeroStake extends GeneralContract {
                 console.error(`coinToken is null`);
                 return false;
             }
-            await coinToken.approveMaximum(userAddress, this._address, amountBN);
+            await coinToken.ensureAllowance(userAddress, this._address, amountBN);
             const contract = await this.getContract();
             const transaction = await contract.depositV2(token, id, amountBN);
             await waitForReceipt(transaction);
