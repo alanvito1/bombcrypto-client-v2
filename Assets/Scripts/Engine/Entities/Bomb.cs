@@ -54,6 +54,8 @@ namespace Engine.Entities {
         }
 
         private BombMovable _movable;
+        public Movable Movable => _movable;
+
         private Action<Bomb> _onExplodedCallback;
 
         public float Damage { set; get; }
