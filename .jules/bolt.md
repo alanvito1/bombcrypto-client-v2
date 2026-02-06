@@ -1,0 +1,3 @@
+## 2024-05-22 - Inconsistent ECS Component Retrieval Error Handling
+**Learning:** The codebase has two distinct ECS implementations with different error handling strategies for missing components. `Engine.Entities.ComponentContainer` returns `null` (via `default`), whereas `BLPvpMode.Engine.ComponentContainer` implicitly throws `KeyNotFoundException` (via dictionary indexer).
+**Action:** When working on ECS components, verify the namespace (`Engine.Entities` vs `BLPvpMode`) to determine expected behavior. Do not blindly apply `TryGetValue` to `BLPvpMode` without handling the "not found" case to match existing exception behavior, or verifying that callers can handle `null`.
