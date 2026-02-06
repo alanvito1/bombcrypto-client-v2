@@ -54,6 +54,12 @@ namespace App {
             $@"([?&]({string.Join("|", SensitiveKeys)})=)([^&]+)",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+        private static readonly Regex UsernameRegex = new Regex(@"^[a-zA-Z0-9]{6,20}$", RegexOptions.Compiled);
+        private static readonly Regex PasswordRegex = new Regex(@"^[^\s]{6,20}$", RegexOptions.Compiled);
+        private static readonly Regex EmailRegex = new Regex(
+            @"^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         public static string RedactSensitiveData(string json) {
             if (string.IsNullOrEmpty(json)) return json;
             try {
@@ -380,22 +386,17 @@ namespace App {
         }
 
         public static string CheckUsernameAndPassword(string username, string password) {
-            var usernameRegex = new Regex(@"[a-zA-Z0-9]{6,20}").Match(username);
-            var passwordRegex = new Regex(@"[^\s]{6,20}").Match(password);
-            if (!usernameRegex.Success || usernameRegex.Length != username.Length) {
+            if (string.IsNullOrEmpty(username) || !UsernameRegex.IsMatch(username)) {
                 return "Invalid username. Check the policy again.";
             }
-            if (!passwordRegex.Success || passwordRegex.Length != password.Length) {
+            if (string.IsNullOrEmpty(password) || !PasswordRegex.IsMatch(password)) {
                 return "Invalid password. Check the policy again.";
             }
             return null;
         }
 
         public static string CheckEmail(string email) {
-            const string pattern =
-                @"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
-            var emailRegex = new Regex(pattern).Match(email);
-            if (!emailRegex.Success) {
+            if (string.IsNullOrEmpty(email) || !EmailRegex.IsMatch(email)) {
                 return "Invalid email. Check the policy again.";
             }
             return null;
