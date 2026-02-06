@@ -30,6 +30,7 @@ namespace Game.UI.FrameTabScroll {
 
         private CSegment[] _segments = null;
         private RectTransform _viewportRectTransform;
+        private RectTransform _segmentListRectTransform;
         private Dictionary<TabMenu, CTabMenu> _dicTabs;
         private Dictionary<TabMenu, CSegment> _dicSegments;
         protected Dictionary<TabMenu, CSegment> DicSegments => _dicSegments;
@@ -84,7 +85,10 @@ namespace Game.UI.FrameTabScroll {
         }
 
         private bool InitSegments() {
-            _segments = segmentList.GetComponentsInChildren<CSegment>();
+            // Optimization: Only search for segments if we haven't found them yet or if the array is empty
+            if (_segments == null || _segments.Length == 0) {
+                _segments = segmentList.GetComponentsInChildren<CSegment>();
+            }
             // this._segments = this.GetSegmentList();
             if (_segments.Length == 0) return false;
             _cSegmentsLast = _segments[_segments.Length - 1];
@@ -94,6 +98,10 @@ namespace Game.UI.FrameTabScroll {
                 if (parent != null) {
                     _viewportRectTransform = parent.GetComponent<RectTransform>();
                 }
+            }
+
+            if (_segmentListRectTransform == null) {
+                _segmentListRectTransform = segmentList.GetComponent<RectTransform>();
             }
             if (_viewportRectTransform == null) return false;
 
@@ -194,12 +202,14 @@ namespace Game.UI.FrameTabScroll {
             if (!_dicSegments.ContainsKey(typeMenu)) {
                 return;
             }
-            var rt = segmentList.GetComponent<RectTransform>();
+            // Optimization: Use cached RectTransform
+            var rt = _segmentListRectTransform != null ? _segmentListRectTransform : segmentList.GetComponent<RectTransform>();
             var heightMax = rt.rect.height;
             if (heightMax == 0) {
                 return;
             }
-            var rtView = scroller.viewport.GetComponent<RectTransform>();
+            // Optimization: Use direct property access since viewport is already a RectTransform
+            var rtView = scroller.viewport;
             heightMax -= rtView.rect.height;
             var segmentTarget = _dicSegments[typeMenu];
             var position = segmentTarget.gameObject.transform.localPosition;
