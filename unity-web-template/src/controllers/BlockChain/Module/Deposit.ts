@@ -17,7 +17,7 @@ export default class Deposit extends GeneralContract {
             const amountFormatted = parseUnits(amount.toString(), 18);
 
             // Check allowance.
-            await token.approveMaximum(userAddress, this._address, amountFormatted);
+            await token.ensureAllowance(userAddress, this._address, amountFormatted);
 
             const contract: Contract = await this.getContract();
             const estimateGas = await contract.deposit.estimateGas(amountFormatted);
@@ -45,7 +45,7 @@ export default class Deposit extends GeneralContract {
             const amountFormatted = parseUnits(amount.toString(), 18);
 
             // Check allowance.
-            await token.approveMaximum(userAddress, this._address, amountFormatted);
+            await token.ensureAllowance(userAddress, this._address, amountFormatted);
 
             const contract: Contract = await this.getContract();
             const estimateGas = await contract.depositV3.estimateGas(amountFormatted, tokenAddress);

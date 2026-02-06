@@ -82,8 +82,8 @@ export default class BHeroSToken extends GeneralContract {
             const countBN = ethers.toBigInt(count * 2);
             const coinBN = ethers.toBigInt(cost.coin) * countBN;
             const senBN = ethers.toBigInt(cost.sen) * countBN;
-            await this._bcoinToken.checkAllowance(userAddress, this._address, coinBN);
-            await this._sensparkToken.checkAllowance(userAddress, this._address, senBN);
+            await this._bcoinToken.ensureAllowance(userAddress, this._address, coinBN);
+            await this._sensparkToken.ensureAllowance(userAddress, this._address, senBN);
 
             const contract = await this.getContract();
             const estimateGas = await contract.mint.estimateGas(count);
