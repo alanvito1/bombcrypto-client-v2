@@ -88,7 +88,7 @@ namespace App {
         /// <returns>The balance as a double.</returns>
         /// <exception cref="Exception">Thrown when the API returns an error code or an empty response.</exception>
         public async Task<double> GetCoinBalance(string walletAddress) {
-            var url = GetHost(Domain, GET_COIN_BALANCE, walletAddress);
+            var url = GetHost(Domain, GET_COIN_BALANCE, Uri.EscapeDataString(walletAddress));
 
             var (code, res) = await Utils.GetWebResponse(_logManager, url);
             var message = "Could not get BCoin Balance";
