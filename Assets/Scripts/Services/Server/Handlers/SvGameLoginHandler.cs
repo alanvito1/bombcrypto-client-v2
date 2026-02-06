@@ -241,7 +241,7 @@ namespace Services.Server.Handlers {
             parameters.PutLong("timestamp", timestamp);
             data.PutUtfString(SFSDefine.SFSField.SIGNATURE, signature);
 
-            _logManager.Log($"Send CMD=LOGIN, data={parameters.ToJson()}");
+            _logManager.Log($"Send CMD=LOGIN, data={Utils.RedactSensitiveData(parameters.ToJson())}");
             return new LoginRequest(username, string.Empty, _serverConfig.Zone, parameters);
         }
 
@@ -280,7 +280,7 @@ namespace Services.Server.Handlers {
             parameters.PutUtfString("hash", hash);
             parameters.PutLong("timestamp", timestamp);
 
-            _logManager.Log($"Send CMD=LOGIN, data={parameters.ToJson()}");
+            _logManager.Log($"Send CMD=LOGIN, data={Utils.RedactSensitiveData(parameters.ToJson())}");
             var loginUsername = username;
             if (IsNeedAddSuffixName(username, network)) {
                 loginUsername = username + network.ToLower();
@@ -345,7 +345,7 @@ namespace Services.Server.Handlers {
             parameters.PutSFSObject("data", data);
             parameters.PutLong("timestamp", timestamp);
 
-            _logManager.Log($"Send CMD=LOGIN, data={parameters.ToJson()}");
+            _logManager.Log($"Send CMD=LOGIN, data={Utils.RedactSensitiveData(parameters.ToJson())}");
             //userNameForServer là userName để lưu trong databasa (hex), username là đia chỉ ví hiện cho user trong game
             return new LoginRequest(hexWallet, "", _serverConfig.Zone, parameters);
         }
@@ -388,7 +388,7 @@ namespace Services.Server.Handlers {
             parameters.PutSFSObject("data", data);
             parameters.PutLong("timestamp", timestamp);
 
-            _logManager.Log($"Send CMD=LOGIN, data={parameters.ToJson()}");
+            _logManager.Log($"Send CMD=LOGIN, data={Utils.RedactSensitiveData(parameters.ToJson())}");
             //userNameForServer là userName để lưu trong databasa (hex), username là đia chỉ ví hiện cho user trong game
             return new LoginRequest(userNameForServer, "", _serverConfig.Zone, parameters);
         }
