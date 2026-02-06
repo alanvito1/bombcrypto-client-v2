@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -36,7 +36,14 @@ using Object = UnityEngine.Object;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace App {
+    /// <summary>
+    /// General purpose utility class for the application.
+    /// Includes methods for networking, time formatting, store redirection, and session management.
+    /// </summary>
     public static class Utils {
+        /// <summary>
+        /// Opens the appropriate app store page based on the runtime platform.
+        /// </summary>
         public static void GoToStore() {
             switch (Application.platform) {
                 case RuntimePlatform.IPhonePlayer: {
@@ -54,6 +61,10 @@ namespace App {
             }
         }
 
+        /// <summary>
+        /// Retrieves the version code of the application (Android only).
+        /// </summary>
+        /// <returns>The version code int, or 20 for non-Android platforms.</returns>
         public static int GetVersionCode() {
 #if UNITY_ANDROID
             AndroidJavaClass up = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
@@ -66,7 +77,13 @@ namespace App {
 #endif
         }
 
-        /// <returns>(is balance changed ?, new balance)</returns>
+        /// <summary>
+        /// Polls the blockchain storage for a balance change.
+        /// </summary>
+        /// <param name="type">The token category to check.</param>
+        /// <param name="blockchainManager">The blockchain manager instance.</param>
+        /// <param name="blockchainStorage">The blockchain storage instance.</param>
+        /// <returns>A tuple: (is balance changed ?, new balance)</returns>
         public static async Task<(bool, double)> WaitForBalanceChange(RpcTokenCategory type,
             IBlockchainManager blockchainManager, IBlockchainStorageManager blockchainStorage) {
             var coinBefore = blockchainStorage.GetBalance(type);
@@ -80,7 +97,9 @@ namespace App {
             return (false, coinBefore);
         }
 
-        // Unity chủ động logout thì phải gọi react để reload
+        /// <summary>
+        /// Handles logout when initiated by Unity. Triggers a scene reload and notifies React.
+        /// </summary>
         public static void KickToConnectScene() {
             var unityCommunication = ServiceLocator.Instance.Resolve<IMasterUnityCommunication>();
             unityCommunication.ResetSession();
@@ -90,13 +109,18 @@ namespace App {
             });
         }
         
-        // React chủ động gọi reload thì unity tự xử lý unity ko gọi lại react logout nữa
+        /// <summary>
+        /// Handles reload when initiated by React. Does NOT send a logout signal back to React.
+        /// </summary>
         public static void ReloadByReact() {
             var unityCommunication = ServiceLocator.Instance.Resolve<IMasterUnityCommunication>();
             unityCommunication.ResetSession();
             ReloadToConnectScene();
         }
         
+        /// <summary>
+        /// Logs out the user and resets the session.
+        /// </summary>
         public static void Logout() {
             var unityCommunication = ServiceLocator.Instance.Resolve<IMasterUnityCommunication>();
             unityCommunication.ResetSession();
@@ -113,14 +137,23 @@ namespace App {
             SceneManager.LoadScene(nameof(ConnectScene));
         }
 
+        /// <summary>
+        /// Formats a BCoin value with 4 decimal places.
+        /// </summary>
         public static string FormatBcoinValue(double value) {
             return $"{value:#,0.####}";
         }
         
+        /// <summary>
+        /// Formats a base value with 6 decimal places.
+        /// </summary>
         public static string FormatBaseValue(double value) {
             return $"{value:#,0.######}";
         }
 
+        /// <summary>
+        /// Converts a large number to a short string format (K, M, B, T).
+        /// </summary>
         public static string ConvertToShortString(int value) {
             string[] suffixes = { "", "K", "M", "B", "T" };
             var suffixIndex = 0;
@@ -148,6 +181,9 @@ namespace App {
                 : $"{walletId[..5]}...{walletId.Substring(walletId.Length - 4, 4)}";
         }
 
+        /// <summary>
+        /// Loads a Sprite from a local path or URL.
+        /// </summary>
         public static async Task<Sprite> LoadImageFromPath(string path) {
             if (IsUrl(path)) {
                 return await LoadImageFromUrl(path);
@@ -159,6 +195,9 @@ namespace App {
             return LoadImageFromTexture(txt);
         }
 
+        /// <summary>
+        /// Loads a Sprite from a web URL using UnityWebRequestTexture.
+        /// </summary>
         public static async Task<Sprite> LoadImageFromUrl(string url) {
             if (string.IsNullOrWhiteSpace(url)) {
                 return null;
@@ -189,12 +228,18 @@ namespace App {
             return path.Contains("://");
         }
 
+        /// <summary>
+        /// Delays execution concurrently with a task.
+        /// </summary>
         public static async Task IgnoreAfter<T>(this Task<T> task, int ms, ITaskDelay taskDelay = null) {
             taskDelay ??= WebGLTaskDelay.Instance;
             var delay = taskDelay.Delay(ms);
             await Task.WhenAny(task, delay);
         }
 
+        /// <summary>
+        /// Adds a timeout to a TaskCompletionSource.
+        /// </summary>
         public static async Task<T> TimeoutAfter<T>(this TaskCompletionSource<T> source, int ms,
             ITaskDelay taskDelay = null) {
             taskDelay ??= WebGLTaskDelay.Instance;
@@ -211,6 +256,9 @@ namespace App {
             return await mainTask;
         }
 
+        /// <summary>
+        /// Retries a function a specified number of times if it fails.
+        /// </summary>
         public static async Task<T> Retry<T>(Func<Task<T>> func, int retryTime) {
             var retry = 0;
             while (retry <= retryTime) {
@@ -227,6 +275,9 @@ namespace App {
             throw new Exception("Failed");
         }
 
+        /// <summary>
+        /// Performs a GET request.
+        /// </summary>
         public static async Task<(long, string)> GetWebResponse(ILogManager logManager, string url) {
             logManager.Log($"GET Web Request: {url}");
             using var request = UnityWebRequest.Get(url);
@@ -235,6 +286,9 @@ namespace App {
             return res;
         }
 
+        /// <summary>
+        /// Performs a GET request with custom headers.
+        /// </summary>
         public static async Task<(long, string)> GetWebResponse(ILogManager logManager, string url, string addHeader,
             string addHeaderContent) {
             logManager.Log($"GET Web Request: {url}");
@@ -246,6 +300,9 @@ namespace App {
             return res;
         }
 
+        /// <summary>
+        /// Performs a POST request with custom headers.
+        /// </summary>
         public static async Task<(long, string)> PostWebResponse(ILogManager logManager, string url, string jsonBody,
             string addHeader, string addHeaderContent) {
             logManager.Log($"POST Web Request: {url}");
@@ -258,6 +315,9 @@ namespace App {
             return res;
         }
 
+        /// <summary>
+        /// Performs a POST request.
+        /// </summary>
         public static async Task<(long, string)> PostWebResponse(ILogManager logManager, string url, string jsonBody) {
             logManager.Log($"POST Web Request: {url}");
             logManager.Log($"POST body: {jsonBody}");
@@ -276,6 +336,9 @@ namespace App {
             return request;
         }
 
+        /// <summary>
+        /// Awaits the UnityWebRequest and returns the response code and text.
+        /// </summary>
         public static async Task<(long, string)> AwaitWebResponse(UnityWebRequest req) {
             await req.SendWebRequest();
             if (req.result != UnityWebRequest.Result.Success) {
@@ -307,6 +370,9 @@ namespace App {
             return null;
         }
 
+        /// <summary>
+        /// Checks if an IP address is within a given subnet.
+        /// </summary>
         public static bool IsInSubnet(string ipString, string subnetMask) {
             var address = IPAddress.Parse(ipString);
             var slashIdx = subnetMask.IndexOf("/");
@@ -386,6 +452,9 @@ namespace App {
         }
     }
 
+    /// <summary>
+    /// Utility for calculating grid layout sizes.
+    /// </summary>
     public static class GridLayoutGroupUtil {
         public static Vector2Int GetColumnAndRow(GridLayoutGroup grid) {
             var itemsCount = grid.transform.childCount;
@@ -480,6 +549,9 @@ namespace App {
         }
     }
 
+    /// <summary>
+    /// Helper for formatting time durations.
+    /// </summary>
     public static class TimeUtil {
         public static string ConvertTimeToString(long duration) {
             return ConvertTimeToString(TimeSpan.FromMilliseconds(duration));
