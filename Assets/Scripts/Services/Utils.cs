@@ -41,6 +41,37 @@ namespace App {
     /// Includes methods for networking, time formatting, store redirection, and session management.
     /// </summary>
     public static class Utils {
+        private static readonly string[] SensitiveKeys = {
+            "password", "token", "access_token", "refresh_token", "secret", "signature", "key", "wallet_hex",
+            "private_key", "input_token", "api_key", "email"
+        };
+
+        private static readonly Regex JsonSensitiveKeysRegex = new Regex(
+            $@"(""({string.Join("|", SensitiveKeys)})""\s*:\s*)""(?:[^""\\]|\\.)*""",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly Regex UrlSensitiveKeysRegex = new Regex(
+            $@"([?&]({string.Join("|", SensitiveKeys)})=)([^&]+)",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        public static string RedactSensitiveData(string json) {
+            if (string.IsNullOrEmpty(json)) return json;
+            try {
+                return JsonSensitiveKeysRegex.Replace(json, "$1\"[REDACTED]\"");
+            } catch (Exception) {
+                return json; // Fallback to original if regex fails
+            }
+        }
+
+        public static string RedactUrl(string url) {
+            if (string.IsNullOrEmpty(url)) return url;
+            try {
+                return UrlSensitiveKeysRegex.Replace(url, "$1[REDACTED]");
+            } catch (Exception) {
+                return url;
+            }
+        }
+
         /// <summary>
         /// Opens the appropriate app store page based on the runtime platform.
         /// </summary>
@@ -279,7 +310,7 @@ namespace App {
         /// Performs a GET request.
         /// </summary>
         public static async Task<(long, string)> GetWebResponse(ILogManager logManager, string url) {
-            logManager.Log($"GET Web Request: {url}");
+            logManager.Log($"GET Web Request: {RedactUrl(url)}");
             using var request = UnityWebRequest.Get(url);
             var res = await AwaitWebResponse(request);
             logManager.Log($"result = {res}");
@@ -291,7 +322,7 @@ namespace App {
         /// </summary>
         public static async Task<(long, string)> GetWebResponse(ILogManager logManager, string url, string addHeader,
             string addHeaderContent) {
-            logManager.Log($"GET Web Request: {url}");
+            logManager.Log($"GET Web Request: {RedactUrl(url)}");
             logManager.Log($"GET header: {addHeader} {addHeaderContent}");
             using var request = UnityWebRequest.Get(url);
             request.SetRequestHeader(addHeader, addHeaderContent);
@@ -305,8 +336,8 @@ namespace App {
         /// </summary>
         public static async Task<(long, string)> PostWebResponse(ILogManager logManager, string url, string jsonBody,
             string addHeader, string addHeaderContent) {
-            logManager.Log($"POST Web Request: {url}");
-            logManager.Log($"POST body: {jsonBody}");
+            logManager.Log($"POST Web Request: {RedactUrl(url)}");
+            logManager.Log($"POST body: {RedactSensitiveData(jsonBody)}");
             logManager.Log($"POST header: {addHeader} {addHeaderContent}");
             using var request = CreatePostWebRequest(url, jsonBody);
             request.SetRequestHeader(addHeader, addHeaderContent);
@@ -319,8 +350,8 @@ namespace App {
         /// Performs a POST request.
         /// </summary>
         public static async Task<(long, string)> PostWebResponse(ILogManager logManager, string url, string jsonBody) {
-            logManager.Log($"POST Web Request: {url}");
-            logManager.Log($"POST body: {jsonBody}");
+            logManager.Log($"POST Web Request: {RedactUrl(url)}");
+            logManager.Log($"POST body: {RedactSensitiveData(jsonBody)}");
             using var request = CreatePostWebRequest(url, jsonBody);
             var res = await AwaitWebResponse(request);
             logManager.Log($"result = {res}");
