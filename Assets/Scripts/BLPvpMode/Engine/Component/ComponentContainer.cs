@@ -14,7 +14,10 @@ namespace BLPvpMode.Engine {
         }
 
         public T GetComponent<T>() where T : IEntityComponent {
-            return (T) _components[typeof(T)];
+            if (_components.TryGetValue(typeof(T), out var component)) {
+                return (T) component;
+            }
+            return default;
         }
     }
 }
