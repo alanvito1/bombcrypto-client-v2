@@ -1,11 +1,11 @@
 import * as Storage from "./Storage.js";
-import { ethers } from "ethers";
 import {sleep} from "../../../../utils/Time.ts";
 import {TransactionReceipt, TransactionResponse} from "ethers";
 import CoinToken from "../CoinToken.ts";
 
 const MIN_CONFIRMATIONS = 6;
-const GAS_LIMIT_MULTIPLIER = 2;
+// GAS: Optimized gas limit buffer (1.2x) to reduce fund requirements and improve transaction success rate.
+const GAS_LIMIT_PERCENTAGE = 120n;
 
 class NetworkData {
     chainId: string;
@@ -68,9 +68,8 @@ async function waitForBlock(block: number): Promise<void> {
     }
 }
 
-function getDoubleGasFeeOption(estimateGas: bigint): { gasLimit: bigint } {
-    const gasMultiplier = ethers.toBigInt(GAS_LIMIT_MULTIPLIER);
-    return { gasLimit: estimateGas * gasMultiplier};
+function getGasFeeOption(estimateGas: bigint): { gasLimit: bigint } {
+    return { gasLimit: (estimateGas * GAS_LIMIT_PERCENTAGE) / 100n};
 }
 
 async function waitForReceipt(transaction: TransactionResponse): Promise<TransactionReceipt | null> {
@@ -98,7 +97,7 @@ function getCoinTokenByBuyHeroCategory(category: number): CoinToken {
 
 export {
     sign,
-    getDoubleGasFeeOption,
+    getGasFeeOption,
     waitForReceipt,
     getAllNetworkRpc,
     getCoinTokenByBuyHeroCategory,
