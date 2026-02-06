@@ -47,7 +47,7 @@ namespace App {
         };
 
         private static readonly Regex JsonSensitiveKeysRegex = new Regex(
-            $@"(""({string.Join("|", SensitiveKeys)})""\s*:\s*)""(?:[^""\\]|\\.)*""",
+            $@"(""({string.Join("|", SensitiveKeys)})""\s*:\s*)(?:""(?:[^""\\]|\\.)*""|[^""\[\{{,}}\]\s]+)",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private static readonly Regex UrlSensitiveKeysRegex = new Regex(

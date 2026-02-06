@@ -57,5 +57,26 @@ namespace Tests {
             Assert.IsNotNull(Utils.CheckUsernameAndPassword("admin@123", "password123")); // username allows alnum only
             Assert.IsNotNull(Utils.CheckUsernameAndPassword("admin123", "pass word")); // password no spaces
         }
+
+        [Test]
+        public void RedactSensitiveData_RedactsNonStrings() {
+            var json = "{\"token\": 12345, \"secret\": \"s3cr3t\", \"key\": true}";
+            var redacted = Utils.RedactSensitiveData(json);
+
+            Assert.IsTrue(redacted.Contains("\"token\": \"[REDACTED]\""));
+            Assert.IsTrue(redacted.Contains("\"secret\": \"[REDACTED]\""));
+            Assert.IsTrue(redacted.Contains("\"key\": \"[REDACTED]\""));
+        }
+
+        [Test]
+        public void RedactSensitiveData_PreservesStructure() {
+            var json = "{\"token\": {\"nested\": 1}, \"secret\": [1, 2], \"other\": \"value\"}";
+            var redacted = Utils.RedactSensitiveData(json);
+
+            // Should NOT redact complex objects to avoid breaking JSON structure
+            Assert.IsTrue(redacted.Contains("\"token\": {\"nested\": 1}"));
+            Assert.IsTrue(redacted.Contains("\"secret\": [1, 2]"));
+            Assert.IsTrue(redacted.Contains("\"other\": \"value\""));
+        }
     }
 }
