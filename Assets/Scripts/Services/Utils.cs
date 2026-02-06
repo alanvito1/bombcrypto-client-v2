@@ -43,7 +43,7 @@ namespace App {
     public static class Utils {
         private static readonly string[] SensitiveKeys = {
             "password", "token", "access_token", "refresh_token", "secret", "signature", "key", "wallet_hex",
-            "private_key", "input_token", "api_key", "email"
+            "private_key", "input_token", "api_key", "email", "lk"
         };
 
         private static readonly Regex JsonSensitiveKeysRegex = new Regex(
