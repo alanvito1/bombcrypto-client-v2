@@ -1,33 +1,46 @@
 # Bombcrypto Game Client
 
-## Overview
+![Unity](https://img.shields.io/badge/Unity-2022.3-black?style=flat&logo=unity)
+![Platform](https://img.shields.io/badge/Platform-WebGL-blue)
+![Status](https://img.shields.io/badge/Status-Active-green)
 
-This project is the **Game Client** for the **Bombcrypto** project.  
-We have decided to open-source it under the **AGPL (GNU Affero General Public License)**.
+> The official Unity WebGL client for the Bombcrypto blockchain game.
 
-Please note that this project **cannot operate as a standalone application**.  
-A compatible **server is required** for the client to function correctly.
+## 📚 Documentation
+- **[System Atlas](SYSTEM_ATLAS.md)**: Full inventory of APIs, components, and data models.
+- **[Architecture](ARCHITECTURE.md)**: Diagrams (Sequence, Class, C4) and structure analysis.
 
-Most sensitive credentials and configuration values have been **intentionally removed**.  
-These values must be provided before the project can be fully compiled,  
-or they may be bypassed depending on your experimentation needs.
+## 🏗️ Architecture Overview
 
-We will continue to provide updates to minimize friction during setup and testing.
+```mermaid
+C4Context
+    title System Context Diagram for Bombcrypto Game Client
 
----
+    Person(Player, "Player", "A user playing the game via WebGL")
+    System(GameClient, "Game Client", "Unity WebGL Application running in browser")
+    System_Ext(GameServer, "Game Server", "Backend API and WebSocket Server (.NET 8)")
+    System_Ext(Blockchain, "Blockchain Network", "Smart Contracts (BSC/Polygon/Solana)")
 
-## Requirements
+    Rel(Player, GameClient, "Plays using", "Browser")
+    Rel(GameClient, GameServer, "API Calls / Socket", "HTTPS/WSS")
+    Rel(GameClient, Blockchain, "Reads/Writes", "Web3")
+```
 
-- **Unity**: 2022.3  
-- **Operating System**: macOS  
-- **Target Platform**: WebGL  
+## 🚀 Quick Start
 
----
+### Prerequisites
+- Unity 2022.3.x
+- `.NET 8` SDK (for backend compatibility checks)
 
-## Initial Setup
+### Setup
+Run the following command to initialize the configuration:
 
 ```bash
-# AppConfig.json is the main configuration file for the project
-# We are unable to provide these values until all related projects are fully open-sourced
 cp Assets/Resources/configs/AppConfig.json.sample Assets/Resources/configs/AppConfig.json
 ```
+
+## ⚠️ Important Note
+This project **cannot operate as a standalone application**. A compatible backend server is required. Most sensitive credentials have been redacted.
+
+---
+*Maintained by Senspark*
