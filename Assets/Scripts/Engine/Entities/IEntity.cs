@@ -242,8 +242,8 @@ namespace Engine.Entities {
 
         [CanBeNull]
         public T GetComponent<T>() where T : IEntityComponent {
-            if (_components.ContainsKey(typeof(T))) {
-                return (T) _components[typeof(T)];
+            if (_components.TryGetValue(typeof(T), out var component)) {
+                return (T) component;
             }
             return default;
         }
