@@ -76,7 +76,7 @@ namespace App {
         }
 
         public async Task ForgotPassword(string email) {
-            var url = $"{_host}{GetForgotPassword}{email}";
+            var url = $"{_host}{GetForgotPassword}{Uri.EscapeDataString(email)}";
             var (code, resStr) = await Utils.GetWebResponse(_logManager, url);
             
             if (code != 200) {
@@ -132,7 +132,7 @@ namespace App {
             var walletAddress = await _signManager.ConnectAccount();
             
             // Sign Message
-            var url = $"{_host}{GetSignTokenUrl}{walletAddress}";
+            var url = $"{_host}{GetSignTokenUrl}{Uri.EscapeDataString(walletAddress)}";
             var (statusCode, resStr) = await Utils.GetWebResponse(_logManager, url);
             
             var failException = new Exception($"Get sign token failed ({statusCode})");
